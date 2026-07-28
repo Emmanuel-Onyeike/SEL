@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite League Season 2 - Players Directory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="players.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-zinc-950 text-white selection:bg-yellow-400 selection:text-black antialiased flex flex-col min-h-screen">
+
+    <!-- Top Navigation Bar -->
+    <header class="fixed top-0 left-0 right-0 bg-black/90 backdrop-blur-md border-b border-yellow-400/20 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-x-3">
+                <div class="w-10 h-10 rounded-xl overflow-hidden border border-yellow-400/40 shadow-md shadow-yellow-400/10 flex items-center justify-center bg-zinc-900 shrink-0">
+                    <img src="elite logo.png" alt="Elite League Logo" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <div class="font-black text-lg tracking-tighter text-white leading-none">ELITE <span class="text-yellow-400">LEAGUE</span></div>
+                    <div class="text-[9px] tracking-widest text-zinc-400 uppercase font-semibold mt-1">Players Directory • 2026</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="mobileMenuBtn" class="lg:hidden w-10 h-10 rounded-xl bg-zinc-900 border border-yellow-400/30 text-yellow-400 flex items-center justify-center text-lg transition hover:bg-zinc-800">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-1 flex pt-16">
+        <!-- Sidebar (PC) -->
+        <aside class="hidden lg:flex flex-col w-64 bg-zinc-900/60 border-r border-yellow-400/10 p-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+            <div class="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-4">Command Menu</div>
+            <div class="space-y-1.5 flex-1">
+                <a href="dashboard.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-chart-pie w-5"></i> Dashboard
+                </a>
+                <a href="players.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs shadow-lg shadow-yellow-400/10 transition">
+                    <i class="fas fa-user-friends w-5"></i> Players
+                </a>
+                <a href="fixtures.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-calendar-alt w-5"></i> Fixtures
+                </a>
+                <a href="standings.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-trophy w-5"></i> Standings
+                </a>
+                <a href="goals.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-futbol w-5"></i> Goals & Assists
+                </a>
+                <a href="live.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-broadcast-tower w-5"></i> Live Center
+                </a>
+                <a href="news.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-newspaper w-5"></i> News
+                </a>
+                <a href="transfers.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-exchange-alt w-5"></i> Transfer Market
+                </a>
+                <a href="settings.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-cog w-5"></i> Settings
+                </a>
+                <a href="admin.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-shield-alt w-5"></i> Admin Panel
+                </a>
+            </div>
+
+            <div class="pt-4 border-t border-zinc-800 mt-4">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 font-semibold text-xs transition">
+                    <i class="fas fa-arrow-left w-5"></i> Exit to Main Site
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8">
+            
+            <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-900 border border-yellow-400/30 rounded-3xl p-6 sm:p-8 shadow-xl">
+                <div>
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs font-bold mb-3">
+                        <i class="fas fa-user-friends"></i> Roster Database
+                    </span>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">Players Management</h1>
+                    <p class="text-zinc-400 text-xs sm:text-sm mt-1">Manage player profiles, track exact positions, assigned roles, and club affiliations.</p>
+                </div>
+            </div>
+
+            <!-- Players Content Section -->
+            <div id="players-section" class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/80">
+                    <div class="flex items-center gap-2.5 text-yellow-400 font-bold text-sm tracking-wide">
+                        <div class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
+                            <i class="fas fa-id-badge"></i>
+                        </div>
+                        Registered Players Directory
+                    </div>
+                    <span id="players-badge" class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">No Data Yet</span>
+                </div>
+
+                <!-- Empty State Display -->
+                <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div class="w-20 h-20 rounded-3xl bg-zinc-900 border border-yellow-400/20 flex items-center justify-center text-yellow-400 text-3xl mb-5 shadow-inner">
+                        <i class="fas fa-user-slash"></i>
+                    </div>
+                    <h3 class="text-white font-black text-lg mb-2">No Players Registered Yet</h3>
+                    <p class="text-zinc-400 text-xs sm:text-sm max-w-md mb-6 leading-relaxed">
+                        We haven't saved any player profiles yet. Once players are added, their names, positions, roles, and club names will appear right here.
+                    </p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Mobile Menu Modal -->
+    <div id="mobileMenuModal" class="fixed inset-0 z-50 hidden">
+        <div id="mobileMenuBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0"></div>
+        <div id="mobileMenuDrawer" class="absolute top-0 right-0 bottom-0 w-80 bg-zinc-900 border-l border-yellow-400/30 p-6 flex flex-col justify-between shadow-2xl transform translate-x-full transition-transform duration-300 overflow-y-auto">
+            <div>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="font-black text-lg text-white">NAVIGATION MENU</div>
+                    <button id="closeMobileMenuBtn" class="w-9 h-9 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="space-y-1.5 font-semibold text-xs">
+                    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-chart-pie w-5"></i> Dashboard
+                    </a>
+                    <a href="players.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-yellow-400 text-black transition">
+                        <i class="fas fa-user-friends w-5"></i> Players
+                    </a>
+                    <a href="fixtures.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-calendar-alt w-5"></i> Fixtures
+                    </a>
+                    <a href="standings.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-trophy w-5"></i> Standings
+                    </a>
+                    <a href="goals.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-futbol w-5"></i> Goals & Assists
+                    </a>
+                    <a href="live.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-broadcast-tower w-5"></i> Live Center
+                    </a>
+                    <a href="news.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-newspaper w-5"></i> News
+                    </a>
+                    <a href="transfers.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-exchange-alt w-5"></i> Transfer Market
+                    </a>
+                    <a href="settings.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-cog w-5"></i> Settings
+                    </a>
+                    <a href="admin.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-shield-alt w-5"></i> Admin Panel
+                    </a>
+                </div>
+            </div>
+            <div class="pt-4 border-t border-zinc-800 mt-6">
+                <a href="index.html" class="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 hover:text-yellow-400 font-bold text-xs transition">
+                    <i class="fas fa-home"></i> Back to Main Site
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centered Alert Modal -->
+    <div id="centeredAlertModal" class="fixed inset-0 modal-backdrop z-50 hidden flex items-center justify-center p-4 transition-opacity bg-black/80 backdrop-blur-sm">
+        <div class="bg-zinc-900 border border-yellow-400/30 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative transform scale-95 opacity-0 transition-all duration-300" id="centeredModalContent">
+            <button id="closeCenteredModalBtn" class="absolute top-5 right-5 text-zinc-400 hover:text-white text-lg w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center transition">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="text-center mt-2">
+                <div class="w-16 h-16 bg-yellow-400/10 border border-yellow-400/30 rounded-2xl flex items-center justify-center mx-auto mb-6 text-yellow-400 text-3xl">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Player Action Notice</h3>
+                <p id="modalMessage" class="text-zinc-400 text-sm mb-6 leading-relaxed">
+                    Player form interface is currently locked because no player data has been saved yet.
+                </p>
+                <button id="dismissModalBtn" class="w-full bg-yellow-400 hover:bg-amber-300 text-black py-3 rounded-xl font-bold text-sm transition shadow-lg">
+                    Got It
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="players.script.js"></script>
+    <script>
+      (async function loadPlayersFromSupabase() {
+        const sb = window.supabase.createClient(
+          'https://tedreqxvodszlsnmigab.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlZHJlcXh2b2Rzemxzbm1pZ2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDM1NzUsImV4cCI6MjEwMDY3OTU3NX0.z7vVBZHhJl-AlXqFpJ3-v3EmuyIL8GUAfZha0EC97CI'
+        );
+        const box = document.getElementById('players-section');
+        if (!box) return;
+
+        const { data: players, error } = await sb
+          .from('players')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Supabase players error:', error);
+          return;
+        }
+        if (!players || !players.length) return;
+
+        const badge = document.getElementById('players-badge');
+        if (badge) {
+          badge.textContent = players.length + ' player' + (players.length !== 1 ? 's' : '');
+          badge.classList.add('text-yellow-400');
+          badge.classList.remove('text-zinc-300');
+        }
+
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function posColor(pos) {
+          if (pos === 'GK') return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+          if (pos === 'DEF') return 'bg-blue-500/15 text-blue-400 border-blue-500/30';
+          if (pos === 'MID') return 'bg-green-500/15 text-green-400 border-green-500/30';
+          if (pos === 'FWD') return 'bg-red-500/15 text-red-400 border-red-500/30';
+          return 'bg-zinc-800 text-zinc-300 border-zinc-700';
+        }
+
+        const rows = players.map(p => `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 hover:border-yellow-400/25 transition">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-11 h-11 rounded-xl bg-yellow-400/10 border border-yellow-400/25 flex items-center justify-center text-yellow-400 font-black text-sm shrink-0">
+                ${p.jersey != null ? '#' + p.jersey : '<i class="fas fa-user text-xs"></i>'}
+              </div>
+              <div class="min-w-0">
+                <div class="font-bold text-white text-sm truncate">${esc(p.name)}</div>
+                <div class="text-[11px] text-zinc-500 mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+                  <span>${esc(p.club) || 'Free agent'}</span>
+                  ${p.role && p.role !== 'Player' ? '<span class="text-yellow-400">· ' + esc(p.role) + '</span>' : ''}
+                </div>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-lg border self-start sm:self-center ${posColor(p.pos)}">${esc(p.pos) || '—'}</span>
+          </div>
+        `).join('');
+
+        const empty = box.querySelector('.flex.flex-col.items-center.justify-center');
+        if (empty) {
+          empty.outerHTML = `<div class="space-y-3">${rows}</div>`;
+        }
+      })();
+    </script>
+</body>
+</html>

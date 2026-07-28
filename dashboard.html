@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite League Season 2 - Full Command Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-zinc-950 text-white selection:bg-yellow-400 selection:text-black antialiased flex flex-col min-h-screen">
+
+    <!-- Top Navigation Bar -->
+    <header class="fixed top-0 left-0 right-0 bg-black/90 backdrop-blur-md border-b border-yellow-400/20 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-x-3">
+                <div class="w-10 h-10 rounded-xl overflow-hidden border border-yellow-400/40 shadow-md shadow-yellow-400/10 flex items-center justify-center bg-zinc-900 shrink-0">
+                    <img src="elite logo.png" alt="Elite League Logo" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <div class="font-black text-lg tracking-tighter text-white leading-none">ELITE <span class="text-yellow-400">LEAGUE</span></div>
+                    <div class="text-[9px] tracking-widest text-zinc-400 uppercase font-semibold mt-1">Full Dashboard • 2026</div>
+                </div>
+            </div>
+          
+
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="hidden sm:inline-flex bg-zinc-900 hover:bg-zinc-800 border border-yellow-400/30 text-yellow-400 px-4 py-2 rounded-xl font-bold text-xs transition items-center gap-2">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <button id="mobileMenuBtn" class="md:hidden w-10 h-10 rounded-xl bg-zinc-900 border border-yellow-400/30 text-yellow-400 flex items-center justify-center text-lg transition hover:bg-zinc-800">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-1 flex pt-16">
+        <!-- Sidebar (PC) -->
+       <aside class="hidden lg:flex flex-col w-64 bg-zinc-900/60 border-r border-yellow-400/10 p-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+            <div class="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-4">Command Menu</div>
+            <div class="space-y-1.5 flex-1">
+                <a href="dashboard.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs shadow-lg shadow-yellow-400/10 transition">
+                    <i class="fas fa-chart-pie w-5"></i> Dashboard
+                </a>
+                <a href="players.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-user-friends w-5"></i> Players
+                </a>
+                <a href="fixtures.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-calendar-alt w-5"></i> Fixtures
+                </a>
+                <a href="standings.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-trophy w-5"></i> Standings
+                </a>
+                <a href="goals.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-futbol w-5"></i> Goals & Assists
+                </a>
+                <a href="live.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-broadcast-tower w-5"></i> Live Center
+                </a>
+                <a href="news.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-newspaper w-5"></i> News
+                </a>
+                <a href="transfers.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-exchange-alt w-5"></i> Transfer Market
+                </a>
+                <a href="settings.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-cog w-5"></i> Settings
+                </a>
+                <a href="admin.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-300 hover:bg-zinc-800/80 hover:text-yellow-400 font-semibold text-xs transition">
+                    <i class="fas fa-shield-alt w-5"></i> Admin Panel
+                </a>
+            </div>
+
+            <div class="pt-4 border-t border-zinc-800 mt-4">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 font-semibold text-xs transition">
+                    <i class="fas fa-arrow-left w-5"></i> Exit to Main Site
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8">
+            
+            <!-- Hero Banner Section -->
+            <div class="bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-900 border border-yellow-400/30 rounded-3xl p-6 sm:p-10 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-yellow-400/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs font-bold mb-4">
+                        <i class="fas fa-bolt"></i> Season 2 Full Command Center
+                    </span>
+                    <h1 id="multilingualGreeting" class="text-2xl sm:text-4xl font-black tracking-tight text-white mb-2 min-h-[2.5rem]">Welcome Back, Administrator</h1>
+                    <p class="text-zinc-400 text-sm sm:text-base max-w-2xl leading-relaxed">
+                        Complete oversight of faculty domestic groups, roster verification, match day officials tracking, referee assignments, disciplinary tracking, and live fixture scheduling for Elite League Season 2.
+                    </p>
+                </div>
+            </div>
+            
+            <script>
+                const greetings = [
+                    "Welcome Back, User", // English
+                    "Waffi, how far! Welcome back", // Nigerian Pidgin
+                    "Sannu da zuwa, Shugaba", // Hausa
+                    "Nno o, Onye Isi", // Igbo
+                    "E n ǹ de, Oga", // Yoruba
+                    "Bienvenue, User", // French
+                    "Bienvenido, User", // Spanish
+                    "Bem-vindo, User", // Portuguese
+                    "Akwaaba, User", // Akan / Ghanaian
+                    "Mema wo akye, Boss", // Twi
+                    "Woezor, Mawu", // Ewe
+                    "Wilkommen, User", // German
+                    "Benvenuto, User", // Italian
+                    "Welkom, User", // Dutch
+                    "Välkommen, User", // Swedish
+                    "Tervetuloa, Valvoja", // Finnish
+                    "Velkommen, AUser", // Norwegian / Danish
+                    "Vitaj, User", // Slovak / Czech
+                    "Witaj, User", // Polish
+                    "Üdvözöljük, User", // Hungarian
+                    "Bun venit, User", // Romanian
+                    "Dobro pozhalovat, User", // Russian
+                    "Hosgeldiniz, Yonetici", // Turkish
+                    "Yōkoso, Kanrisha", // Japanese
+                    "Hwan-yeong-hab-ni-da, Gwan-li-ja", // Korean
+                    "Huānyíng huílái, Guǎnlǐyuán", // Chinese (Mandarin)
+                    "Chào mừng trở lại, Quản trị viên", // Vietnamese
+                    "Selamat datang, User", // Indonesian / Malay
+                    "Yassas, Diachiristis", // Greek
+                    "Baruch haba, Menahel", // Hebrew
+                    "Ahlan bik, Almudir", // Arabic
+                    "Namaste, Adhikari", // Hindi
+                    "ยินดีต้อนรับ ผู้ดูแลระบบ", // Thai
+                    "Välitatud, User", // Estonian
+                    "Laud, User", // Latvian
+                    "Sveiki, User", // Lithuanian
+                    "Velkominn, Stjórnandi", // Icelandic
+                    "Failte, Riangaire", // Irish
+                    "Croeso, Gweinyddwr", // Welsh
+                    "Shatsih, Admin" // Zulu
+                ];
+            
+                let currentIndex = 0;
+                const greetingElement = document.getElementById("multilingualGreeting");
+            
+                function rotateGreeting() {
+                    if (!greetingElement) return;
+                    greetingElement.style.opacity = 0;
+                    setTimeout(() => {
+                        greetingElement.textContent = greetings[currentIndex];
+                        greetingElement.style.opacity = 1;
+                        greetingElement.style.transition = "opacity 0.5s ease-in-out";
+                        currentIndex = (currentIndex + 1) % greetings.length;
+                    }, 300);
+                }
+            
+                // Initialize transition style and start interval loop (rotates every 3.5 seconds)
+                if (greetingElement) {
+                    greetingElement.style.transition = "opacity 0.5s ease-in-out";
+                    setInterval(rotateGreeting, 3500);
+                }
+            </script>
+
+            <!-- Metrics Grid Section -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-zinc-900/60 border border-yellow-400/20 rounded-2xl p-5 shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Total Teams</span>
+                        <i class="fas fa-users text-yellow-400 text-lg"></i>
+                    </div>
+                    <div class="text-3xl font-black text-white">12 Teams</div>
+                    <div class="text-xs text-zinc-500 mt-1">Qualified for Championship</div>
+                </div>
+
+                <div class="bg-zinc-900/60 border border-yellow-400/20 rounded-2xl p-5 shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Active Groups</span>
+                        <i class="fas fa-sitemap text-yellow-400 text-lg"></i>
+                    </div>
+                    <div class="text-3xl font-black text-white">5 Groups</div>
+                    <div class="text-xs text-zinc-500 mt-1">Faculty Domestic Leagues</div>
+                </div>
+
+                <div class="bg-zinc-900/60 border border-yellow-400/20 rounded-2xl p-5 shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Defending Champs</span>
+                        <i class="fas fa-trophy text-yellow-400 text-lg"></i>
+                    </div>
+                    <div class="text-3xl font-black text-yellow-400">CSC 400</div>
+                    <div class="text-xs text-zinc-500 mt-1">Unbeaten (8 Wins in 2025)</div>
+                </div>
+
+                <div class="bg-zinc-900/60 border border-yellow-400/20 rounded-2xl p-5 shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Squad Size Rule</span>
+                        <i class="fas fa-user-check text-yellow-400 text-lg"></i>
+                    </div>
+                    <div class="text-3xl font-black text-white">14 Players</div>
+                    <div class="text-xs text-zinc-500 mt-1">Mandatory per team</div>
+                </div>
+            </div>
+
+          <!-- Quick Management Tools & System Alerts Control -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- System Trigger Section / Action Center Card -->
+    <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/30 rounded-3xl p-6 shadow-xl flex flex-col justify-between relative overflow-hidden group hover:border-yellow-400/50 transition-all duration-300">
+        <div class="absolute -right-12 -top-12 w-36 h-36 bg-yellow-400/5 rounded-full blur-2xl group-hover:bg-yellow-400/10 transition-all"></div>
+        <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs font-bold">
+                    <i class="fas fa-bell"></i> Broadcast Center
+                </span>
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            </div>
+            <h3 class="text-xl font-black text-white mb-2 tracking-tight">System Alert Modal</h3>
+            <p class="text-zinc-400 text-xs sm:text-sm mb-6 leading-relaxed">
+                Trigger a fully centered, high-priority administrator notification modal across the viewport instantly.
+            </p>
+        </div>
+        <button id="triggerAlertBtn" class="w-full relative z-10 bg-yellow-400 hover:bg-amber-300 text-black py-3.5 px-4 rounded-2xl font-black text-xs uppercase tracking-wider transition-all duration-200 shadow-lg shadow-yellow-400/10 flex items-center justify-center gap-2 group-hover:scale-[1.02]">
+            <i class="fas fa-paper-plane text-sm"></i> Open Center Alert Modal
+        </button>
+    </div>
+
+    <!-- Quick Roster Audit Status (Empty State - No Data Saved Yet) -->
+    <div id="roster-audit-section" class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl lg:col-span-2 flex flex-col justify-between relative overflow-hidden">
+        <div>
+            <div class="flex items-center justify-between mb-5 pb-3 border-b border-zinc-800/80">
+                <div class="flex items-center gap-2.5 text-yellow-400 font-bold text-sm tracking-wide">
+                    <div class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    Roster Audit Compliance Status
+                </div>
+                <span class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">No Data Saved</span>
+            </div>
+
+            <!-- Empty State Display -->
+            <div class="flex flex-col items-center justify-center py-10 px-4 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-yellow-400/20 flex items-center justify-center text-yellow-400 text-2xl mb-4 shadow-inner">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h4 class="text-white font-bold text-base mb-1">No Roster Audits Found</h4>
+                <p class="text-zinc-400 text-xs max-w-sm mb-5 leading-relaxed">
+                    We haven't saved any data yet. Faculty roster submissions and team documentation will appear here once uploaded.
+                </p>
+                
+            </div>
+        </div>
+        
+        <div class="mt-4 pt-3 border-t border-zinc-800/50 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
+            <span>Compliance Requirement: Min. 14 squads</span>
+            <span class="text-yellow-400 font-semibold">Season 2 Audit Active</span>
+        </div>
+    </div>
+</div>
+
+            <!-- Detailed Tournament Schedule Overview Table -->
+            <div id="matchday-lineup" class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/80">
+                    <div>
+                        <h3 class="text-lg font-black text-white tracking-tight flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            Upcoming Match Day Lineup
+                        </h3>
+                        <p class="text-xs text-zinc-400 mt-0.5">Overview of immediate fixtures scheduled across faculty pitches.</p>
+                    </div>
+                    <span class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">No Data Yet</span>
+                </div>
+            
+                <!-- Empty State Display -->
+                <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-yellow-400/20 flex items-center justify-center text-yellow-400 text-2xl mb-4 shadow-inner">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <h4 class="text-white font-bold text-base mb-1">No Fixtures Scheduled Yet</h4>
+                    <p class="text-zinc-400 text-xs max-w-sm mb-5 leading-relaxed">
+                        We haven't saved any fixture match data yet. Upcoming match day lineups will populate here automatically once generated.
+                    </p>
+                  
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Mobile Menu Modal -->
+    <div id="mobileMenuModal" class="fixed inset-0 z-50 hidden">
+        <div id="mobileMenuBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0"></div>
+        <div id="mobileMenuDrawer" class="absolute top-0 right-0 bottom-0 w-80 bg-zinc-900 border-l border-yellow-400/30 p-6 flex flex-col justify-between shadow-2xl transform translate-x-full transition-transform duration-300 overflow-y-auto">
+            <div>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="font-black text-lg text-white">NAVIGATION MENU</div>
+                    <button id="closeMobileMenuBtn" class="w-9 h-9 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="space-y-1.5 font-semibold text-xs">
+                    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-yellow-400 text-black transition">
+                        <i class="fas fa-chart-pie w-5"></i> Dashboard
+                    </a>
+                    <a href="players.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-user-friends w-5"></i> Players
+                    </a>
+                    <a href="fixtures.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-calendar-alt w-5"></i> Fixtures
+                    </a>
+                    <a href="standings.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-trophy w-5"></i> Standings
+                    </a>
+                    <a href="goals.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-futbol w-5"></i> Goals & Assists
+                    </a>
+                    <a href="live.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-broadcast-tower w-5"></i> Live Center
+                    </a>
+                    <a href="news.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-newspaper w-5"></i> News
+                    </a>
+                    <a href="transfers.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-exchange-alt w-5"></i> Transfer Market
+                    </a>
+                    <a href="settings.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-cog w-5"></i> Settings
+                    </a>
+                    <a href="admin.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-yellow-400 transition">
+                        <i class="fas fa-shield-alt w-5"></i> Admin Panel
+                    </a>
+                </div>
+            </div>
+            <div class="pt-4 border-t border-zinc-800 mt-6">
+                <a href="index.html" class="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 hover:text-yellow-400 font-bold text-xs transition">
+                    <i class="fas fa-home"></i> Back to Main Site
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centered Alert Modal (Saved Information Rule Compliant) -->
+    <div id="centeredAlertModal" class="fixed inset-0 modal-backdrop z-50 hidden flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-zinc-900 border border-yellow-400/30 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative transform scale-95 opacity-0 transition-all duration-300" id="centeredModalContent">
+            <button id="closeCenteredModalBtn" class="absolute top-5 right-5 text-zinc-400 hover:text-white text-lg w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center transition">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="text-center mt-2">
+                <div class="w-16 h-16 bg-yellow-400/10 border border-yellow-400/30 rounded-2xl flex items-center justify-center mx-auto mb-6 text-yellow-400 text-3xl">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">System Notice</h3>
+                <p class="text-zinc-400 text-sm mb-6 leading-relaxed">
+                    All administrative alerts and notifications are successfully centralized in this modal interface at the exact center of the page.
+                </p>
+                <button id="dismissModalBtn" class="w-full bg-yellow-400 hover:bg-amber-300 text-black py-3 rounded-xl font-bold text-sm transition shadow-lg">
+                    Got It
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.script.js"></script>
+    <script>
+      // Load matches from Supabase into #matchday-lineup
+      (async function loadMatchdayFromSupabase() {
+        const SUPABASE_URL = 'https://tedreqxvodszlsnmigab.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlZHJlcXh2b2Rzemxzbm1pZ2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDM1NzUsImV4cCI6MjEwMDY3OTU3NX0.z7vVBZHhJl-AlXqFpJ3-v3EmuyIL8GUAfZha0EC97CI';
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const box = document.getElementById('matchday-lineup');
+        if (!box) return;
+
+        const { data: matches, error } = await sb
+          .from('matches')
+          .select('*')
+          .order('match_date', { ascending: true, nullsFirst: false })
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Supabase error:', error);
+          return;
+        }
+        if (!matches || !matches.length) return; // keep empty state
+
+        // Update badge
+        const badge = box.querySelector('span.text-\\[11px\\], .border-zinc-700\\/50');
+        const badgeEl = box.querySelector('.flex.items-center.justify-between.mb-6 span:last-child')
+          || box.querySelector('.mb-6 .rounded-xl.border');
+        if (badgeEl) {
+          badgeEl.textContent = matches.length + ' fixture' + (matches.length !== 1 ? 's' : '');
+          badgeEl.classList.remove('text-zinc-300');
+          badgeEl.classList.add('text-yellow-400');
+        }
+
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+        function statusClass(s) {
+          if (s === 'live') return 'bg-green-500/15 text-green-400 border-green-500/30';
+          if (s === 'finished') return 'bg-zinc-800 text-zinc-400 border-zinc-700';
+          if (s === 'postponed') return 'bg-orange-500/15 text-orange-400 border-orange-500/30';
+          return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/30';
+        }
+
+        const rows = matches.map(m => {
+          const score = (m.status === 'live' || m.status === 'finished')
+            ? `<span class="font-black text-yellow-400 text-sm">${m.hscore} - ${m.ascore}</span>`
+            : `<span class="text-zinc-500 text-xs font-bold uppercase">vs</span>`;
+          return `
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 hover:border-yellow-400/25 transition">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap text-sm">
+                  <span class="font-bold text-white">${esc(m.home)}</span>
+                  ${score}
+                  <span class="font-bold text-white">${esc(m.away)}</span>
+                </div>
+                <div class="text-[11px] text-zinc-500 mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                  <span><i class="fas fa-calendar-day mr-1 text-yellow-400/70"></i>${m.match_date || 'TBD'}${m.match_time ? ' · ' + String(m.match_time).slice(0,5) : ''}</span>
+                  <span><i class="fas fa-map-marker-alt mr-1 text-yellow-400/70"></i>${esc(m.venue) || 'TBD'}</span>
+                  <span class="text-yellow-400/80">${esc(m.stage) || ''}</span>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-lg border ${statusClass(m.status)}">${esc(m.status)}</span>
+            </div>`;
+        }).join('');
+
+        // Replace empty state with list (keep the header)
+        const empty = box.querySelector('.flex.flex-col.items-center.justify-center');
+        if (empty) {
+          empty.outerHTML = `<div class="space-y-3">${rows}</div>`;
+        } else {
+          box.insertAdjacentHTML('beforeend', `<div class="space-y-3">${rows}</div>`);
+        }
+      })();
+    </script>
+</body>
+</html>

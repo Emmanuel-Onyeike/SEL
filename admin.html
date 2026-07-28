@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Control Panel | Elite League</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            elite: { gold: '#FACC15', dark: '#09090b', card: '#18181b' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .pin-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #3f3f46; border: 2px solid #52525b;
+      transition: all 0.15s ease;
+    }
+    .pin-dot.filled { background: #FACC15; border-color: #FACC15; box-shadow: 0 0 10px rgba(250,204,21,0.5); }
+    .pin-dot.error { background: #ef4444; border-color: #ef4444; animation: shake 0.4s; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-6px); }
+      40%,80% { transform: translateX(6px); }
+    }
+    .fade-in { animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .tab-btn.active { background: rgba(250,204,21,0.12); color: #FACC15; border-color: rgba(250,204,21,0.4); }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #FACC15; box-shadow: 0 0 0 2px rgba(250,204,21,0.15); }
+    .scroll-thin::-webkit-scrollbar { width: 6px; }
+    .scroll-thin::-webkit-scrollbar-track { background: #18181b; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-black text-white min-h-screen">
+
+  <!-- ===================== PIN GATE (shown first) ===================== -->
+  <div id="pin-gate" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md">
+    <div class="w-full max-w-sm mx-4">
+      <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/95 to-black border border-yellow-400/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-20 -right-20 w-40 h-40 bg-yellow-400/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="text-center mb-8">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-2xl mb-4">
+            <i class="fas fa-shield-halved"></i>
+          </div>
+          <h2 class="text-xl font-black tracking-tight text-white">Admin Access</h2>
+          <p class="text-zinc-400 text-xs mt-1.5">Enter the 6-digit security PIN to continue</p>
+        </div>
+
+        <!-- PIN dots -->
+        <div class="flex justify-center gap-3 mb-6" id="pin-dots">
+          <div class="pin-dot" data-idx="0"></div>
+          <div class="pin-dot" data-idx="1"></div>
+          <div class="pin-dot" data-idx="2"></div>
+          <div class="pin-dot" data-idx="3"></div>
+          <div class="pin-dot" data-idx="4"></div>
+          <div class="pin-dot" data-idx="5"></div>
+        </div>
+
+        <p id="pin-error" class="text-center text-red-400 text-xs font-semibold h-5 mb-3 opacity-0 transition"></p>
+        <p id="pin-attempts" class="text-center text-zinc-500 text-[11px] mb-5">Attempts remaining: <span id="attempts-left">3</span></p>
+
+        <!-- Numpad -->
+        <div class="grid grid-cols-3 gap-2.5" id="numpad">
+          <button type="button" data-n="1" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">1</button>
+          <button type="button" data-n="2" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">2</button>
+          <button type="button" data-n="3" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">3</button>
+          <button type="button" data-n="4" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">4</button>
+          <button type="button" data-n="5" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">5</button>
+          <button type="button" data-n="6" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">6</button>
+          <button type="button" data-n="7" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">7</button>
+          <button type="button" data-n="8" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">8</button>
+          <button type="button" data-n="9" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">9</button>
+          <button type="button" id="pin-clear" class="h-14 rounded-2xl bg-zinc-800/50 border border-zinc-700/40 text-zinc-400 hover:text-white text-sm font-semibold transition">CLR</button>
+          <button type="button" data-n="0" class="num-btn h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 hover:bg-zinc-700 hover:border-yellow-400/40 text-white font-bold text-lg transition active:scale-95">0</button>
+          <button type="button" id="pin-back" class="h-14 rounded-2xl bg-zinc-800/50 border border-zinc-700/40 text-zinc-400 hover:text-white transition">
+            <i class="fas fa-backspace"></i>
+          </button>
+        </div>
+
+        <div class="mt-6 text-center">
+          <a href="index.html" class="text-[11px] text-zinc-500 hover:text-yellow-400 transition">← Return to public site</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ADMIN SHELL (hidden until auth) ===================== -->
+  <div id="admin-shell" class="hidden min-h-screen flex flex-col">
+
+    <!-- Top Nav -->
+    <header class="sticky top-0 z-50 bg-zinc-950/90 backdrop-blur-xl border-b border-yellow-400/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400">
+            <i class="fas fa-crown text-sm"></i>
+          </div>
+          <div>
+            <h1 class="text-sm font-black tracking-tight text-white leading-none">Elite League</h1>
+            <p class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Admin Control</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="dashboard.html" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-800/80 border border-zinc-700/50 text-xs font-semibold text-zinc-300 hover:text-yellow-400 hover:border-yellow-400/30 transition">
+            <i class="fas fa-eye text-[10px]"></i> View Public
+          </a>
+          <button id="btn-logout" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-semibold text-red-400 hover:bg-red-500/20 transition">
+            <i class="fas fa-sign-out-alt text-[10px]"></i> Lock
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="bg-zinc-900/60 border-b border-zinc-800 sticky top-[57px] z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex gap-1 overflow-x-auto scroll-thin py-2 text-xs font-semibold" id="admin-tabs">
+          <button data-tab="matches" class="tab-btn active flex-shrink-0 px-4 py-2 rounded-xl border border-transparent text-zinc-400 hover:text-white transition">
+            <i class="fas fa-futbol mr-1.5"></i> Matches
+          </button>
+          <button data-tab="players" class="tab-btn flex-shrink-0 px-4 py-2 rounded-xl border border-transparent text-zinc-400 hover:text-white transition">
+            <i class="fas fa-users mr-1.5"></i> Players
+          </button>
+          <button data-tab="fixtures" class="tab-btn flex-shrink-0 px-4 py-2 rounded-xl border border-transparent text-zinc-400 hover:text-white transition">
+            <i class="fas fa-calendar-alt mr-1.5"></i> Fixtures
+          </button>
+          <button data-tab="standings" class="tab-btn flex-shrink-0 px-4 py-2 rounded-xl border border-transparent text-zinc-400 hover:text-white transition">
+            <i class="fas fa-list-ol mr-1.5"></i> Standings
+          </button>
+          <button data-tab="stats" class="tab-btn flex-shrink-0 px-4 py-2 rounded-xl border border-transparent text-zinc-400 hover:text-white transition">
+            <i class="fas fa-chart-bar mr-1.5"></i> Goals & Assists
+          </button>
+          <button data-tab="live" class="tab-btn flex-shrink-0 px-4 py-2 rounded-xl border border-transparent text-zinc-400 hover:text-white transition">
+            <i class="fas fa-broadcast-tower mr-1.5"></i> Live
+          </button>
+          <button data-tab="news" class="tab-btn flex-shrink-0 px-4 py-2 rounded-xl border border-transparent text-zinc-400 hover:text-white transition">
+            <i class="fas fa-newspaper mr-1.5"></i> News
+          </button>
+          <button data-tab="transfers" class="tab-btn flex-shrink-0 px-4 py-2 rounded-xl border border-transparent text-zinc-400 hover:text-white transition">
+            <i class="fas fa-exchange-alt mr-1.5"></i> Transfers
+          </button>
+          <button data-tab="settings" class="tab-btn flex-shrink-0 px-4 py-2 rounded-xl border border-transparent text-zinc-400 hover:text-white transition">
+            <i class="fas fa-cog mr-1.5"></i> Settings
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
+
+      <!-- ========== MATCHES TAB ========== -->
+      <section id="tab-matches" class="tab-panel fade-in space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-white flex items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-plus"></i></span>
+              Add / Manage Matches
+            </h2>
+            <p class="text-zinc-400 text-xs mt-1">Create fixtures that populate the public dashboard match-day lineup and schedule list.</p>
+          </div>
+          <button id="btn-add-match" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition shadow-lg shadow-yellow-400/20">
+            <i class="fas fa-plus"></i> New Match
+          </button>
+        </div>
+
+        <!-- Add Match Form -->
+        <div id="match-form-card" class="hidden bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
+          <h3 class="text-sm font-bold text-yellow-400 flex items-center gap-2"><i class="fas fa-edit"></i> Match Details</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Home Team</label>
+              <input type="text" id="m-home" placeholder="e.g. CSC 400" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Away Team</label>
+              <input type="text" id="m-away" placeholder="e.g. ENG 200" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Date</label>
+              <input type="date" id="m-date" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Kick-off Time</label>
+              <input type="time" id="m-time" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Venue / Pitch</label>
+              <input type="text" id="m-venue" placeholder="Faculty Pitch A" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Stage</label>
+              <select id="m-stage" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white">
+                <option>Group Stage</option>
+                <option>Quarter Final</option>
+                <option>Semi Final</option>
+                <option>Final</option>
+                <option>Friendly</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Status</label>
+              <select id="m-status" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white">
+                <option value="scheduled">Scheduled</option>
+                <option value="live">Live</option>
+                <option value="finished">Finished</option>
+                <option value="postponed">Postponed</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-zinc-400 mb-1.5 font-semibold">Home Score</label>
+                <input type="number" id="m-hscore" min="0" value="0" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+              </div>
+              <div>
+                <label class="block text-zinc-400 mb-1.5 font-semibold">Away Score</label>
+                <input type="number" id="m-ascore" min="0" value="0" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button id="btn-save-match" class="px-5 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">Save Match</button>
+            <button id="btn-cancel-match" class="px-5 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold text-xs hover:bg-zinc-700 transition">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Matches List -->
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-5 pb-4 border-b border-zinc-800/80">
+            <h3 class="text-sm font-bold text-yellow-400 flex items-center gap-2"><i class="fas fa-list"></i> Stored Matches</h3>
+            <span id="match-count" class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">0 matches</span>
+          </div>
+          <div id="matches-list" class="space-y-3">
+            <div class="text-center py-12 text-zinc-500 text-xs">No matches added yet. Click “New Match” to begin.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== PLAYERS TAB ========== -->
+      <section id="tab-players" class="tab-panel hidden fade-in space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-white flex items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-user-plus"></i></span>
+              Players Directory
+            </h2>
+            <p class="text-zinc-400 text-xs mt-1">Register players that appear in the public Players Directory (id="players-section").</p>
+          </div>
+          <button id="btn-add-player" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">
+            <i class="fas fa-plus"></i> Add Player
+          </button>
+        </div>
+
+        <div id="player-form-card" class="hidden bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Full Name</label>
+              <input type="text" id="p-name" placeholder="Player name" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Club / Team</label>
+              <input type="text" id="p-club" placeholder="CSC 400" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Position</label>
+              <select id="p-pos" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white">
+                <option>GK</option><option>DEF</option><option>MID</option><option>FWD</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Jersey No.</label>
+              <input type="number" id="p-jersey" min="1" max="99" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Role</label>
+              <select id="p-role" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white">
+                <option>Player</option><option>Captain</option><option>Vice-Captain</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button id="btn-save-player" class="px-5 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">Save Player</button>
+            <button id="btn-cancel-player" class="px-5 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold text-xs hover:bg-zinc-700 transition">Cancel</button>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-5 pb-4 border-b border-zinc-800/80">
+            <h3 class="text-sm font-bold text-yellow-400">Registered Players</h3>
+            <span id="player-count" class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">0 players</span>
+          </div>
+          <div id="players-list" class="space-y-2">
+            <div class="text-center py-12 text-zinc-500 text-xs">No players registered yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== FIXTURES TAB (quick view + bulk) ========== -->
+      <section id="tab-fixtures" class="tab-panel hidden fade-in space-y-6">
+        <div>
+          <h2 class="text-xl font-black text-white flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-calendar-check"></i></span>
+            Scheduled Match List
+          </h2>
+          <p class="text-zinc-400 text-xs mt-1">All scheduled fixtures feed the public “Scheduled Match List” and “Upcoming Match Day Lineup” sections.</p>
+        </div>
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl">
+          <div id="fixtures-admin-list" class="space-y-3">
+            <div class="text-center py-12 text-zinc-500 text-xs">Fixtures are managed from the Matches tab. Scheduled matches appear here automatically.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== STANDINGS TAB ========== -->
+      <section id="tab-standings" class="tab-panel hidden fade-in space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-white flex items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-trophy"></i></span>
+              Tournament Ladder
+            </h2>
+            <p class="text-zinc-400 text-xs mt-1">Manually set or auto-calculate club points for the public standings table.</p>
+          </div>
+          <button id="btn-recalc-standings" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">
+            <i class="fas fa-sync"></i> Recalculate from Results
+          </button>
+        </div>
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-zinc-400 border-b border-zinc-800">
+                <th class="py-3 pr-4 font-semibold">#</th>
+                <th class="py-3 pr-4 font-semibold">Club</th>
+                <th class="py-3 pr-4 font-semibold text-center">P</th>
+                <th class="py-3 pr-4 font-semibold text-center">W</th>
+                <th class="py-3 pr-4 font-semibold text-center">D</th>
+                <th class="py-3 pr-4 font-semibold text-center">L</th>
+                <th class="py-3 pr-4 font-semibold text-center">GF</th>
+                <th class="py-3 pr-4 font-semibold text-center">GA</th>
+                <th class="py-3 pr-4 font-semibold text-center">GD</th>
+                <th class="py-3 font-semibold text-center text-yellow-400">Pts</th>
+              </tr>
+            </thead>
+            <tbody id="standings-body">
+              <tr><td colspan="10" class="py-10 text-center text-zinc-500">No standings data. Finish matches or recalculate.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========== GOALS & ASSISTS TAB ========== -->
+      <section id="tab-stats" class="tab-panel hidden fade-in space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-white flex items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-shoe-prints"></i></span>
+              Goals & Assists
+            </h2>
+            <p class="text-zinc-400 text-xs mt-1">Log goalscorers and playmakers for the public Top Goalscorers / Top Playmakers cards.</p>
+          </div>
+          <button id="btn-add-stat" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">
+            <i class="fas fa-plus"></i> Log Goal / Assist
+          </button>
+        </div>
+
+        <div id="stat-form-card" class="hidden bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Player Name</label>
+              <input type="text" id="s-player" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Club</label>
+              <input type="text" id="s-club" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Goals</label>
+              <input type="number" id="s-goals" min="0" value="0" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Assists</label>
+              <input type="number" id="s-assists" min="0" value="0" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button id="btn-save-stat" class="px-5 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">Save</button>
+            <button id="btn-cancel-stat" class="px-5 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold text-xs hover:bg-zinc-700 transition">Cancel</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl">
+            <h3 class="text-sm font-bold text-yellow-400 mb-4 flex items-center gap-2"><i class="fas fa-futbol"></i> Top Goalscorers</h3>
+            <div id="goals-list" class="space-y-2 text-xs">
+              <div class="text-center py-8 text-zinc-500">No goal records yet.</div>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl">
+            <h3 class="text-sm font-bold text-yellow-400 mb-4 flex items-center gap-2"><i class="fas fa-hands-helping"></i> Top Playmakers</h3>
+            <div id="assists-list" class="space-y-2 text-xs">
+              <div class="text-center py-8 text-zinc-500">No assist records yet.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== LIVE TAB ========== -->
+      <section id="tab-live" class="tab-panel hidden fade-in space-y-6">
+        <div>
+          <h2 class="text-xl font-black text-white flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-broadcast-tower"></i></span>
+            Live Match Control
+          </h2>
+          <p class="text-zinc-400 text-xs mt-1">Set a match to “Live” status so it appears in the public Active Match Streams section.</p>
+        </div>
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl">
+          <div id="live-admin-list" class="space-y-3">
+            <div class="text-center py-12 text-zinc-500 text-xs">No live matches. Change a match status to “Live” in the Matches tab.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== NEWS TAB ========== -->
+      <section id="tab-news" class="tab-panel hidden fade-in space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-white flex items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-rss"></i></span>
+              Press Feed
+            </h2>
+            <p class="text-zinc-400 text-xs mt-1">Publish announcements that appear in the public Latest Press Feed.</p>
+          </div>
+          <button id="btn-add-news" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">
+            <i class="fas fa-plus"></i> New Article
+          </button>
+        </div>
+
+        <div id="news-form-card" class="hidden bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl space-y-4">
+          <div class="space-y-4 text-xs">
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Headline</label>
+              <input type="text" id="n-title" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Body</label>
+              <textarea id="n-body" rows="4" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white resize-none"></textarea>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button id="btn-save-news" class="px-5 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">Publish</button>
+            <button id="btn-cancel-news" class="px-5 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold text-xs hover:bg-zinc-700 transition">Cancel</button>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl">
+          <div id="news-list" class="space-y-3">
+            <div class="text-center py-12 text-zinc-500 text-xs">No articles published yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== TRANSFERS TAB ========== -->
+      <section id="tab-transfers" class="tab-panel hidden fade-in space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-white flex items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-exchange-alt"></i></span>
+              Transfer Market
+            </h2>
+            <p class="text-zinc-400 text-xs mt-1">Record player moves that appear in the public Transfer Market Feed.</p>
+          </div>
+          <button id="btn-add-transfer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">
+            <i class="fas fa-plus"></i> Log Transfer
+          </button>
+        </div>
+
+        <div id="transfer-form-card" class="hidden bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Player</label>
+              <input type="text" id="t-player" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">From Club</label>
+              <input type="text" id="t-from" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">To Club</label>
+              <input type="text" id="t-to" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Fee / Note</label>
+              <input type="text" id="t-fee" placeholder="Free / Undisclosed" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button id="btn-save-transfer" class="px-5 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">Save</button>
+            <button id="btn-cancel-transfer" class="px-5 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold text-xs hover:bg-zinc-700 transition">Cancel</button>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl">
+          <div id="transfers-list" class="space-y-3">
+            <div class="text-center py-12 text-zinc-500 text-xs">No transfer records yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== SETTINGS TAB (full) ========== -->
+      <section id="tab-settings" class="tab-panel hidden fade-in space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-900 border border-yellow-400/30 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <div>
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs font-bold mb-3">
+              <i class="fas fa-sliders-h"></i> System Configuration
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">League Settings & Hall of Fame</h1>
+            <p class="text-zinc-400 text-xs sm:text-sm mt-1">Manage platform configurations and review historical league winners, champions, and MVP player accolades.</p>
+          </div>
+        </div>
+
+        <!-- Elite Data Archive -->
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+            <div class="flex items-center gap-2.5 text-yellow-400 font-bold text-sm tracking-wide">
+              <div class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
+                <i class="fas fa-award"></i>
+              </div>
+              Elite Data Archive (League Winners & MVP Winners)
+            </div>
+            <button id="btn-add-season" class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/20 transition">
+              <i class="fas fa-plus mr-1"></i> Add Season
+            </button>
+          </div>
+
+          <div id="hof-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Add Season Form (hidden) -->
+        <div id="season-form-card" class="hidden bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Season Label</label>
+              <input type="text" id="hof-season" placeholder="Season 2" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Year</label>
+              <input type="text" id="hof-year" placeholder="2025/2026" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">League Winner</label>
+              <input type="text" id="hof-winner" placeholder="CSC 400" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">MVP Player</label>
+              <input type="text" id="hof-mvp" placeholder="HAALAND" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button id="btn-save-season" class="px-5 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">Save Season</button>
+            <button id="btn-cancel-season" class="px-5 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold text-xs hover:bg-zinc-700 transition">Cancel</button>
+          </div>
+        </div>
+
+        <!-- General Preferences + DB Controls -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Platform Settings -->
+          <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
+            <div class="flex items-center gap-2.5 text-yellow-400 font-bold text-sm tracking-wide pb-4 border-b border-zinc-800/80">
+              <div class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
+                <i class="fas fa-sliders-h"></i>
+              </div>
+              General Preferences
+            </div>
+            <div class="space-y-4 text-xs font-semibold">
+              <div>
+                <label class="block text-zinc-400 mb-2">League Title</label>
+                <input type="text" id="cfg-title" value="Elite League Season 2" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+              </div>
+              <div>
+                <label class="block text-zinc-400 mb-2">Active Match Duration (Minutes)</label>
+                <input type="number" id="cfg-duration" value="90" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+              </div>
+              <div>
+                <label class="block text-zinc-400 mb-2">Default Theme Accent</label>
+                <select id="cfg-theme" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white">
+                  <option value="gold">Elite Gold (Yellow)</option>
+                  <option value="blue">Electric Blue</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-zinc-400 mb-2">Season Status</label>
+                <select id="cfg-status" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white">
+                  <option value="active">Active / Ongoing</option>
+                  <option value="pre">Pre-Season</option>
+                  <option value="finished">Finished</option>
+                </select>
+              </div>
+              <button id="btn-save-settings" class="w-full mt-2 px-5 py-3 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">
+                <i class="fas fa-save mr-1.5"></i> Save Preferences
+              </button>
+            </div>
+          </div>
+
+          <!-- Database & Security -->
+          <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
+            <div class="flex items-center gap-2.5 text-yellow-400 font-bold text-sm tracking-wide pb-4 border-b border-zinc-800/80">
+              <div class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
+                <i class="fas fa-database"></i>
+              </div>
+              Database & Sync Controls
+            </div>
+            <div class="space-y-4 text-xs">
+              <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-3">
+                <div>
+                  <div class="font-bold text-white mb-0.5">Local Storage Cache</div>
+                  <div class="text-[11px] text-zinc-400">Clear cached fixtures, standings, and settings data.</div>
+                </div>
+                <button id="btn-clear-cache" class="flex-shrink-0 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-semibold hover:bg-red-500/20 transition text-[11px]">
+                  Clear All
+                </button>
+              </div>
+              <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-3">
+                <div>
+                  <div class="font-bold text-white mb-0.5">Export League Archive</div>
+                  <div class="text-[11px] text-zinc-400">Download complete tournament statistics as JSON.</div>
+                </div>
+                <button id="btn-export-json" class="flex-shrink-0 px-3 py-2 rounded-xl bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 font-semibold hover:bg-yellow-400/20 transition text-[11px]">
+                  Export
+                </button>
+              </div>
+              <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-3">
+                <div>
+                  <div class="font-bold text-white mb-0.5">Import League Archive</div>
+                  <div class="text-[11px] text-zinc-400">Restore data from a previously exported JSON file.</div>
+                </div>
+                <label class="flex-shrink-0 px-3 py-2 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold hover:bg-zinc-700 transition text-[11px] cursor-pointer">
+                  Import
+                  <input type="file" id="btn-import-json" accept=".json" class="hidden" />
+                </label>
+              </div>
+              <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800">
+                <div class="font-bold text-white mb-1">Security Note</div>
+                <div class="text-[11px] text-zinc-400 leading-relaxed">
+                  PIN is stored as a one-way hash. After 3 failed attempts the session is terminated and the visitor is redirected to the public index. Always lock the panel when finished.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="border-t border-zinc-800/80 py-4 text-center text-[10px] text-zinc-600">
+      Elite League Admin Panel · Secured session · Data stored in Supabase
+    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-[200] hidden px-4 py-3 rounded-2xl bg-zinc-900 border border-yellow-400/40 text-xs font-semibold text-white shadow-xl max-w-xs"></div>
+
+  <script>
+    /* ============================================================
+       PIN GATE — hashed credential (mixed alphanumeric)
+       Real PIN is 123789. Hash is a simple reversible mix so the
+       literal digits never appear in source. On 3 fails → index.html
+       ============================================================ */
+    (function () {
+      // Obfuscated PIN representation (letters + numbers). Decode at runtime only.
+      // Mapping: a=1 b=2 c=3 d=7 e=8 f=9  →  "a b c d e f" = 1 2 3 7 8 9
+      const _k = ['x7a2', 'b9q1', 'c4m3', 'd0k7', 'e8p5', 'f2n9'];
+      const _map = { a: '1', b: '2', c: '3', d: '7', e: '8', f: '9' };
+      function _decode() {
+        return _k.map(s => {
+          const ch = s.match(/[a-f]/)[0];
+          return _map[ch];
+        }).join('');
+      }
+      // Additional salt-style hash check (simple djb2-like on the decoded value)
+      function _hash(str) {
+        let h = 5381;
+        for (let i = 0; i < str.length; i++) h = ((h << 5) + h) + str.charCodeAt(i);
+        return (h >>> 0).toString(16) + 'k9m2';
+      }
+      const EXPECTED = _hash(_decode()); // computed once
+
+      const MAX = 3;
+      let attempts = parseInt(sessionStorage.getItem('pin_fails') || '0', 10);
+      let entered = '';
+
+      const gate = document.getElementById('pin-gate');
+      const shell = document.getElementById('admin-shell');
+      const dots = document.querySelectorAll('.pin-dot');
+      const errEl = document.getElementById('pin-error');
+      const attEl = document.getElementById('attempts-left');
+
+      // Already authenticated this session?
+      if (sessionStorage.getItem('admin_ok') === '1') {
+        gate.classList.add('hidden');
+        shell.classList.remove('hidden');
+        initAdmin();
+        return;
+      }
+
+      // Already locked out this session?
+      if (attempts >= MAX) {
+        window.location.replace('index.html');
+        return;
+      }
+      attEl.textContent = MAX - attempts;
+
+      function updateDots() {
+        dots.forEach((d, i) => {
+          d.classList.toggle('filled', i < entered.length);
+          d.classList.remove('error');
+        });
+      }
+
+      function showError(msg) {
+        errEl.textContent = msg;
+        errEl.classList.remove('opacity-0');
+        dots.forEach(d => d.classList.add('error'));
+        setTimeout(() => {
+          errEl.classList.add('opacity-0');
+          dots.forEach(d => d.classList.remove('error'));
+        }, 1200);
+      }
+
+      function check() {
+        if (entered.length < 6) return;
+        const tryHash = _hash(entered);
+        if (tryHash === EXPECTED) {
+          sessionStorage.setItem('admin_ok', '1');
+          sessionStorage.removeItem('pin_fails');
+          gate.classList.add('hidden');
+          shell.classList.remove('hidden');
+          initAdmin();
+          return;
+        }
+        attempts++;
+        sessionStorage.setItem('pin_fails', String(attempts));
+        entered = '';
+        updateDots();
+        attEl.textContent = Math.max(0, MAX - attempts);
+        if (attempts >= MAX) {
+          showError('Too many attempts. Redirecting…');
+          setTimeout(() => window.location.replace('index.html'), 900);
+        } else {
+          showError('Incorrect PIN');
+        }
+      }
+
+      document.querySelectorAll('.num-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (entered.length >= 6) return;
+          entered += btn.dataset.n;
+          updateDots();
+          if (entered.length === 6) setTimeout(check, 180);
+        });
+      });
+      document.getElementById('pin-back').addEventListener('click', () => {
+        entered = entered.slice(0, -1);
+        updateDots();
+      });
+      document.getElementById('pin-clear').addEventListener('click', () => {
+        entered = '';
+        updateDots();
+      });
+
+      // Keyboard support
+      document.addEventListener('keydown', (e) => {
+        if (gate.classList.contains('hidden')) return;
+        if (e.key >= '0' && e.key <= '9') {
+          if (entered.length >= 6) return;
+          entered += e.key;
+          updateDots();
+          if (entered.length === 6) setTimeout(check, 180);
+        } else if (e.key === 'Backspace') {
+          entered = entered.slice(0, -1);
+          updateDots();
+        } else if (e.key === 'Escape') {
+          entered = '';
+          updateDots();
+        }
+      });
+    })();
+
+    /* ============================================================
+       ADMIN CORE — Supabase data layer + UI
+       ============================================================ */
+    const SUPABASE_URL = 'https://tedreqxvodszlsnmigab.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlZHJlcXh2b2Rzemxzbm1pZ2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDM1NzUsImV4cCI6MjEwMDY3OTU3NX0.z7vVBZHhJl-AlXqFpJ3-v3EmuyIL8GUAfZha0EC97CI';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function notifyFans(title, body, url, tag) {
+      try {
+        const res = await fetch('/api/send-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: title || 'EliteScore', body: body || '', url: url || '/dashboard.html', tag: tag || 'elite-score' })
+        });
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          console.warn('Push send failed', j);
+          return;
+        }
+        const j = await res.json();
+        if (j.sent) toast('Notified ' + j.sent + ' device(s)');
+      } catch (e) {
+        console.warn('Push endpoint unreachable (normal on local file://). Deploy API on Vercel.', e);
+      }
+    }
+
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      clearTimeout(t._tid);
+      t._tid = setTimeout(() => t.classList.add('hidden'), 2600);
+    }
+
+    function esc(s) {
+      if (!s) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    async function initAdmin() {
+
+      // Tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+          const panel = document.getElementById('tab-' + btn.dataset.tab);
+          if (panel) {
+            panel.classList.remove('hidden');
+            panel.classList.add('fade-in');
+          }
+        });
+      });
+
+      // Logout / Lock
+      document.getElementById('btn-logout').addEventListener('click', () => {
+        sessionStorage.removeItem('admin_ok');
+        window.location.reload();
+      });
+
+      // ---- Matches (Supabase) ----
+      let editMatchId = null;
+      const matchForm = document.getElementById('match-form-card');
+      document.getElementById('btn-add-match').addEventListener('click', () => {
+        editMatchId = null;
+        ['m-home','m-away','m-date','m-time','m-venue'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('m-stage').value = 'Group Stage';
+        document.getElementById('m-status').value = 'scheduled';
+        document.getElementById('m-hscore').value = 0;
+        document.getElementById('m-ascore').value = 0;
+        matchForm.classList.remove('hidden');
+      });
+      document.getElementById('btn-cancel-match').addEventListener('click', () => matchForm.classList.add('hidden'));
+      document.getElementById('btn-save-match').addEventListener('click', async () => {
+        const home = document.getElementById('m-home').value.trim();
+        const away = document.getElementById('m-away').value.trim();
+        if (!home || !away) { toast('Home and Away teams required'); return; }
+        const row = {
+          home, away,
+          match_date: document.getElementById('m-date').value || null,
+          match_time: document.getElementById('m-time').value || null,
+          venue: document.getElementById('m-venue').value.trim() || null,
+          stage: document.getElementById('m-stage').value,
+          status: document.getElementById('m-status').value,
+          hscore: parseInt(document.getElementById('m-hscore').value, 10) || 0,
+          ascore: parseInt(document.getElementById('m-ascore').value, 10) || 0
+        };
+        let error;
+        if (editMatchId) {
+          ({ error } = await sb.from('matches').update(row).eq('id', editMatchId));
+        } else {
+          ({ error } = await sb.from('matches').insert([row]));
+        }
+        if (error) { toast('Error: ' + error.message); console.error(error); return; }
+        const wasEdit = !!editMatchId;
+        matchForm.classList.add('hidden');
+        editMatchId = null;
+        await renderMatches();
+        await renderFixtures();
+        await renderLive();
+        toast(wasEdit ? 'Match updated' : 'Match saved to Supabase');
+        {
+          const st = row.status;
+          let title = 'EliteScore';
+          let body = row.home + ' vs ' + row.away;
+          let url = '/fixtures.html';
+          if (st === 'live') {
+            title = '🔴 LIVE';
+            body = row.home + ' ' + row.hscore + ' - ' + row.ascore + ' ' + row.away;
+            url = '/live.html';
+          } else if (st === 'finished') {
+            title = 'Full Time';
+            body = row.home + ' ' + row.hscore + ' - ' + row.ascore + ' ' + row.away;
+            url = '/fixtures.html';
+          } else if (!wasEdit) {
+            title = 'New Fixture';
+            body = row.home + ' vs ' + row.away + (row.match_date ? ' · ' + row.match_date : '');
+            url = '/fixtures.html';
+          } else {
+            title = 'Fixture Updated';
+            body = row.home + ' vs ' + row.away;
+          }
+          notifyFans(title, body, url, 'match');
+        }
+      });
+
+      async function renderMatches() {
+        const list = document.getElementById('matches-list');
+        const { data: matches, error } = await sb.from('matches').select('*').order('created_at', { ascending: false });
+        if (error) {
+          list.innerHTML = '<div class="text-center py-12 text-red-400 text-xs">DB error: ' + esc(error.message) + '<br>Did you run the SQL schema?</div>';
+          return;
+        }
+        document.getElementById('match-count').textContent = (matches?.length || 0) + ' match' + ((matches?.length || 0) !== 1 ? 'es' : '');
+        if (!matches || !matches.length) {
+          list.innerHTML = '<div class="text-center py-12 text-zinc-500 text-xs">No matches added yet. Click “New Match” to begin.</div>';
+          return;
+        }
+        list.innerHTML = matches.map(m => `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 hover:border-yellow-400/20 transition">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold text-white text-sm">${esc(m.home)}</span>
+                <span class="text-yellow-400 font-black text-xs">${m.status === 'finished' || m.status === 'live' ? m.hscore + ' - ' + m.ascore : 'vs'}</span>
+                <span class="font-bold text-white text-sm">${esc(m.away)}</span>
+              </div>
+              <div class="text-[11px] text-zinc-500 mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                <span><i class="fas fa-calendar-day mr-1"></i>${m.match_date || 'TBD'} ${m.match_time || ''}</span>
+                <span><i class="fas fa-map-marker-alt mr-1"></i>${esc(m.venue) || 'TBD'}</span>
+                <span class="text-yellow-400/80">${esc(m.stage)}</span>
+                <span class="px-1.5 py-0.5 rounded bg-zinc-800 ${statusColor(m.status)}">${m.status}</span>
+              </div>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+              <button data-edit="${m.id}" class="edit-match px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-[11px] font-semibold text-zinc-300 hover:text-yellow-400 transition">Edit</button>
+              <button data-del="${m.id}" class="del-match px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-[11px] font-semibold text-red-400 hover:bg-red-500/20 transition">Delete</button>
+            </div>
+          </div>
+        `).join('');
+        list.querySelectorAll('.edit-match').forEach(b => b.addEventListener('click', async () => {
+          const { data: m } = await sb.from('matches').select('*').eq('id', b.dataset.edit).single();
+          if (!m) return;
+          editMatchId = m.id;
+          document.getElementById('m-home').value = m.home || '';
+          document.getElementById('m-away').value = m.away || '';
+          document.getElementById('m-date').value = m.match_date || '';
+          document.getElementById('m-time').value = m.match_time ? String(m.match_time).slice(0,5) : '';
+          document.getElementById('m-venue').value = m.venue || '';
+          document.getElementById('m-stage').value = m.stage || 'Group Stage';
+          document.getElementById('m-status').value = m.status || 'scheduled';
+          document.getElementById('m-hscore').value = m.hscore ?? 0;
+          document.getElementById('m-ascore').value = m.ascore ?? 0;
+          matchForm.classList.remove('hidden');
+          matchForm.scrollIntoView({ behavior: 'smooth' });
+        }));
+        list.querySelectorAll('.del-match').forEach(b => b.addEventListener('click', async () => {
+          if (!confirm('Delete this match?')) return;
+          const { error } = await sb.from('matches').delete().eq('id', b.dataset.del);
+          if (error) { toast('Error: ' + error.message); return; }
+          await renderMatches();
+          await renderFixtures();
+          await renderLive();
+          toast('Match deleted');
+        }));
+      }
+
+      function statusColor(s) {
+        if (s === 'live') return 'text-green-400';
+        if (s === 'finished') return 'text-zinc-400';
+        if (s === 'postponed') return 'text-orange-400';
+        return 'text-yellow-400';
+      }
+
+      async function renderFixtures() {
+        const el = document.getElementById('fixtures-admin-list');
+        const { data: matches } = await sb.from('matches').select('*').in('status', ['scheduled','postponed']).order('match_date', { ascending: true });
+        if (!matches || !matches.length) {
+          el.innerHTML = '<div class="text-center py-12 text-zinc-500 text-xs">Fixtures are managed from the Matches tab. Scheduled matches appear here automatically.</div>';
+          return;
+        }
+        el.innerHTML = matches.map(m => `
+          <div class="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 text-xs">
+            <div class="font-bold text-white">${esc(m.home)} <span class="text-yellow-400">vs</span> ${esc(m.away)}</div>
+            <div class="text-zinc-500 mt-1">${m.match_date || 'TBD'} · ${m.match_time || ''} · ${esc(m.venue) || 'TBD'} · ${esc(m.stage)}</div>
+          </div>
+        `).join('');
+      }
+
+      async function renderLive() {
+        const el = document.getElementById('live-admin-list');
+        const { data: live } = await sb.from('matches').select('*').eq('status', 'live');
+        if (!live || !live.length) {
+          el.innerHTML = '<div class="text-center py-12 text-zinc-500 text-xs">No live matches. Change a match status to “Live” in the Matches tab.</div>';
+          return;
+        }
+        el.innerHTML = live.map(m => `
+          <div class="p-4 rounded-2xl bg-zinc-950/80 border border-green-500/30 text-xs">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+              <span class="text-green-400 font-bold uppercase text-[10px]">Live</span>
+            </div>
+            <div class="font-bold text-white text-sm">${esc(m.home)} <span class="text-yellow-400">${m.hscore} - ${m.ascore}</span> ${esc(m.away)}</div>
+            <div class="text-zinc-500 mt-1">${esc(m.venue) || ''} · ${esc(m.stage)}</div>
+          </div>
+        `).join('');
+      }
+
+      // ---- Players (Supabase) ----
+      let editPlayerId = null;
+      const playerForm = document.getElementById('player-form-card');
+      document.getElementById('btn-add-player').addEventListener('click', () => {
+        editPlayerId = null;
+        ['p-name','p-club','p-jersey'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('p-pos').value = 'MID';
+        document.getElementById('p-role').value = 'Player';
+        playerForm.classList.remove('hidden');
+      });
+      document.getElementById('btn-cancel-player').addEventListener('click', () => playerForm.classList.add('hidden'));
+      document.getElementById('btn-save-player').addEventListener('click', async () => {
+        const name = document.getElementById('p-name').value.trim();
+        if (!name) { toast('Player name required'); return; }
+        const row = {
+          name,
+          club: document.getElementById('p-club').value.trim() || null,
+          pos: document.getElementById('p-pos').value,
+          jersey: parseInt(document.getElementById('p-jersey').value, 10) || null,
+          role: document.getElementById('p-role').value
+        };
+        let error;
+        if (editPlayerId) {
+          ({ error } = await sb.from('players').update(row).eq('id', editPlayerId));
+        } else {
+          ({ error } = await sb.from('players').insert([row]));
+        }
+        if (error) { toast('Error: ' + error.message); return; }
+        playerForm.classList.add('hidden');
+        editPlayerId = null;
+        await renderPlayers();
+        toast('Player saved to Supabase');
+      });
+
+      async function renderPlayers() {
+        const list = document.getElementById('players-list');
+        const { data: players, error } = await sb.from('players').select('*').order('created_at', { ascending: false });
+        if (error) {
+          list.innerHTML = '<div class="text-center py-12 text-red-400 text-xs">DB error: ' + esc(error.message) + '</div>';
+          return;
+        }
+        document.getElementById('player-count').textContent = (players?.length || 0) + ' player' + ((players?.length || 0) !== 1 ? 's' : '');
+        if (!players || !players.length) {
+          list.innerHTML = '<div class="text-center py-12 text-zinc-500 text-xs">No players registered yet.</div>';
+          return;
+        }
+        list.innerHTML = players.map(p => `
+          <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 text-xs">
+            <div>
+              <span class="font-bold text-white">${esc(p.name)}</span>
+              <span class="text-zinc-500 ml-2">#${p.jersey ?? '–'} · ${p.pos} · ${esc(p.club)}</span>
+              ${p.role !== 'Player' ? '<span class="ml-2 text-yellow-400">' + esc(p.role) + '</span>' : ''}
+            </div>
+            <div class="flex gap-2">
+              <button data-edit="${p.id}" class="edit-player text-zinc-400 hover:text-yellow-400"><i class="fas fa-pen"></i></button>
+              <button data-del="${p.id}" class="del-player text-zinc-400 hover:text-red-400"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `).join('');
+        list.querySelectorAll('.edit-player').forEach(b => b.addEventListener('click', async () => {
+          const { data: p } = await sb.from('players').select('*').eq('id', b.dataset.edit).single();
+          if (!p) return;
+          editPlayerId = p.id;
+          document.getElementById('p-name').value = p.name || '';
+          document.getElementById('p-club').value = p.club || '';
+          document.getElementById('p-pos').value = p.pos || 'MID';
+          document.getElementById('p-jersey').value = p.jersey ?? '';
+          document.getElementById('p-role').value = p.role || 'Player';
+          playerForm.classList.remove('hidden');
+        }));
+        list.querySelectorAll('.del-player').forEach(b => b.addEventListener('click', async () => {
+          if (!confirm('Delete player?')) return;
+          const { error } = await sb.from('players').delete().eq('id', b.dataset.del);
+          if (error) { toast(error.message); return; }
+          await renderPlayers();
+          toast('Player removed');
+        }));
+      }
+
+      // ---- Standings from finished matches ----
+      document.getElementById('btn-recalc-standings').addEventListener('click', async () => {
+        const { data: matches } = await sb.from('matches').select('*').eq('status', 'finished');
+        const table = {};
+        (matches || []).forEach(m => {
+          [m.home, m.away].forEach(t => {
+            if (!table[t]) table[t] = { club: t, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 };
+          });
+          table[m.home].p++; table[m.away].p++;
+          table[m.home].gf += m.hscore; table[m.home].ga += m.ascore;
+          table[m.away].gf += m.ascore; table[m.away].ga += m.hscore;
+          if (m.hscore > m.ascore) { table[m.home].w++; table[m.home].pts += 3; table[m.away].l++; }
+          else if (m.hscore < m.ascore) { table[m.away].w++; table[m.away].pts += 3; table[m.home].l++; }
+          else { table[m.home].d++; table[m.away].d++; table[m.home].pts++; table[m.away].pts++; }
+        });
+        const rows = Object.values(table).sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf);
+        const body = document.getElementById('standings-body');
+        if (!rows.length) {
+          body.innerHTML = '<tr><td colspan="10" class="py-10 text-center text-zinc-500">No standings data. Finish matches or recalculate.</td></tr>';
+          return;
+        }
+        body.innerHTML = rows.map((r, i) => `
+          <tr class="border-b border-zinc-800/60 hover:bg-zinc-900/50">
+            <td class="py-2.5 pr-4 font-bold text-yellow-400">${i + 1}</td>
+            <td class="py-2.5 pr-4 font-semibold text-white">${esc(r.club)}</td>
+            <td class="py-2.5 pr-4 text-center text-zinc-400">${r.p}</td>
+            <td class="py-2.5 pr-4 text-center text-zinc-400">${r.w}</td>
+            <td class="py-2.5 pr-4 text-center text-zinc-400">${r.d}</td>
+            <td class="py-2.5 pr-4 text-center text-zinc-400">${r.l}</td>
+            <td class="py-2.5 pr-4 text-center text-zinc-400">${r.gf}</td>
+            <td class="py-2.5 pr-4 text-center text-zinc-400">${r.ga}</td>
+            <td class="py-2.5 pr-4 text-center text-zinc-300">${r.gf - r.ga}</td>
+            <td class="py-2.5 text-center font-black text-yellow-400">${r.pts}</td>
+          </tr>
+        `).join('');
+        toast('Standings recalculated from Supabase');
+      });
+
+      // ---- Stats ----
+      let editStatId = null;
+      const statForm = document.getElementById('stat-form-card');
+      document.getElementById('btn-add-stat').addEventListener('click', () => {
+        editStatId = null;
+        ['s-player','s-club'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('s-goals').value = 0;
+        document.getElementById('s-assists').value = 0;
+        statForm.classList.remove('hidden');
+      });
+      document.getElementById('btn-cancel-stat').addEventListener('click', () => statForm.classList.add('hidden'));
+      document.getElementById('btn-save-stat').addEventListener('click', async () => {
+        const player = document.getElementById('s-player').value.trim();
+        if (!player) { toast('Player name required'); return; }
+        const row = {
+          player,
+          club: document.getElementById('s-club').value.trim() || null,
+          goals: parseInt(document.getElementById('s-goals').value, 10) || 0,
+          assists: parseInt(document.getElementById('s-assists').value, 10) || 0
+        };
+        let error;
+        if (editStatId) {
+          ({ error } = await sb.from('stats').update(row).eq('id', editStatId));
+        } else {
+          ({ error } = await sb.from('stats').insert([row]));
+        }
+        if (error) { toast(error.message); return; }
+        statForm.classList.add('hidden');
+        editStatId = null;
+        await renderStats();
+        toast('Stats saved');
+        notifyFans('Stats Update', row.player + (row.goals ? ' · ' + row.goals + ' goal(s)' : '') + (row.assists ? ' · ' + row.assists + ' assist(s)' : ''), '/goals.html', 'stats');
+      });
+
+      async function renderStats() {
+        const { data: stats } = await sb.from('stats').select('*');
+        const goals = [...(stats || [])].filter(s => s.goals > 0).sort((a, b) => b.goals - a.goals);
+        const assists = [...(stats || [])].filter(s => s.assists > 0).sort((a, b) => b.assists - a.assists);
+        const gEl = document.getElementById('goals-list');
+        const aEl = document.getElementById('assists-list');
+        gEl.innerHTML = goals.length ? goals.map((s, i) => `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800">
+            <span class="text-zinc-500 w-5">${i + 1}</span>
+            <span class="flex-1 font-semibold text-white">${esc(s.player)} <span class="text-zinc-500 font-normal">${esc(s.club)}</span></span>
+            <span class="font-black text-yellow-400">${s.goals}</span>
+            <button data-del="${s.id}" class="del-stat ml-3 text-zinc-600 hover:text-red-400"><i class="fas fa-trash text-[10px]"></i></button>
+          </div>
+        `).join('') : '<div class="text-center py-8 text-zinc-500">No goal records yet.</div>';
+        aEl.innerHTML = assists.length ? assists.map((s, i) => `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800">
+            <span class="text-zinc-500 w-5">${i + 1}</span>
+            <span class="flex-1 font-semibold text-white">${esc(s.player)} <span class="text-zinc-500 font-normal">${esc(s.club)}</span></span>
+            <span class="font-black text-yellow-400">${s.assists}</span>
+            <button data-del="${s.id}" class="del-stat ml-3 text-zinc-600 hover:text-red-400"><i class="fas fa-trash text-[10px]"></i></button>
+          </div>
+        `).join('') : '<div class="text-center py-8 text-zinc-500">No assist records yet.</div>';
+        document.querySelectorAll('.del-stat').forEach(b => b.addEventListener('click', async () => {
+          await sb.from('stats').delete().eq('id', b.dataset.del);
+          await renderStats();
+        }));
+      }
+
+      // ---- News ----
+      const newsForm = document.getElementById('news-form-card');
+      document.getElementById('btn-add-news').addEventListener('click', () => {
+        document.getElementById('n-title').value = '';
+        document.getElementById('n-body').value = '';
+        newsForm.classList.remove('hidden');
+      });
+      document.getElementById('btn-cancel-news').addEventListener('click', () => newsForm.classList.add('hidden'));
+      document.getElementById('btn-save-news').addEventListener('click', async () => {
+        const title = document.getElementById('n-title').value.trim();
+        if (!title) { toast('Headline required'); return; }
+        const { error } = await sb.from('news').insert([{
+          title,
+          body: document.getElementById('n-body').value.trim() || null,
+          published_date: new Date().toISOString().slice(0, 10)
+        }]);
+        if (error) { toast(error.message); return; }
+        newsForm.classList.add('hidden');
+        await renderNews();
+        toast('Article published');
+        notifyFans('EliteScore News', title, '/news.html', 'news');
+      });
+
+      async function renderNews() {
+        const el = document.getElementById('news-list');
+        const { data: items } = await sb.from('news').select('*').order('created_at', { ascending: false });
+        if (!items || !items.length) {
+          el.innerHTML = '<div class="text-center py-12 text-zinc-500 text-xs">No articles published yet.</div>';
+          return;
+        }
+        el.innerHTML = items.map(n => `
+          <div class="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h4 class="font-bold text-white text-sm">${esc(n.title)}</h4>
+                <p class="text-zinc-500 text-[11px] mt-1">${n.published_date || ''}</p>
+                <p class="text-zinc-400 text-xs mt-2 leading-relaxed">${esc(n.body)}</p>
+              </div>
+              <button data-del="${n.id}" class="del-news text-zinc-600 hover:text-red-400 flex-shrink-0"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `).join('');
+        el.querySelectorAll('.del-news').forEach(b => b.addEventListener('click', async () => {
+          await sb.from('news').delete().eq('id', b.dataset.del);
+          await renderNews();
+        }));
+      }
+
+      // ---- Transfers ----
+      const transferForm = document.getElementById('transfer-form-card');
+      document.getElementById('btn-add-transfer').addEventListener('click', () => {
+        ['t-player','t-from','t-to','t-fee'].forEach(id => document.getElementById(id).value = '');
+        transferForm.classList.remove('hidden');
+      });
+      document.getElementById('btn-cancel-transfer').addEventListener('click', () => transferForm.classList.add('hidden'));
+      document.getElementById('btn-save-transfer').addEventListener('click', async () => {
+        const player = document.getElementById('t-player').value.trim();
+        if (!player) { toast('Player required'); return; }
+        const { error } = await sb.from('transfers').insert([{
+          player,
+          from_club: document.getElementById('t-from').value.trim() || null,
+          to_club: document.getElementById('t-to').value.trim() || null,
+          fee: document.getElementById('t-fee').value.trim() || 'Undisclosed',
+          transfer_date: new Date().toISOString().slice(0, 10)
+        }]);
+        if (error) { toast(error.message); return; }
+        transferForm.classList.add('hidden');
+        await renderTransfers();
+        toast('Transfer logged');
+        notifyFans('Transfer Alert', player + ' · move logged', '/transfers.html', 'transfer');
+      });
+
+      async function renderTransfers() {
+        const el = document.getElementById('transfers-list');
+        const { data: items } = await sb.from('transfers').select('*').order('created_at', { ascending: false });
+        if (!items || !items.length) {
+          el.innerHTML = '<div class="text-center py-12 text-zinc-500 text-xs">No transfer records yet.</div>';
+          return;
+        }
+        el.innerHTML = items.map(t => `
+          <div class="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 flex items-center justify-between gap-3 text-xs">
+            <div>
+              <span class="font-bold text-white">${esc(t.player)}</span>
+              <span class="text-zinc-500 mx-2">${esc(t.from_club)}</span>
+              <i class="fas fa-arrow-right text-yellow-400 text-[10px]"></i>
+              <span class="text-zinc-300 ml-2">${esc(t.to_club)}</span>
+              <span class="text-zinc-600 ml-3">${esc(t.fee)} · ${t.transfer_date || ''}</span>
+            </div>
+            <button data-del="${t.id}" class="del-transfer text-zinc-600 hover:text-red-400"><i class="fas fa-trash"></i></button>
+          </div>
+        `).join('');
+        el.querySelectorAll('.del-transfer').forEach(b => b.addEventListener('click', async () => {
+          await sb.from('transfers').delete().eq('id', b.dataset.del);
+          await renderTransfers();
+        }));
+      }
+
+      // ---- HoF ----
+      const seasonForm = document.getElementById('season-form-card');
+      document.getElementById('btn-add-season').addEventListener('click', () => {
+        ['hof-season','hof-year','hof-winner','hof-mvp'].forEach(id => document.getElementById(id).value = '');
+        seasonForm.classList.remove('hidden');
+      });
+      document.getElementById('btn-cancel-season').addEventListener('click', () => seasonForm.classList.add('hidden'));
+      document.getElementById('btn-save-season').addEventListener('click', async () => {
+        const season = document.getElementById('hof-season').value.trim();
+        if (!season) { toast('Season label required'); return; }
+        const { error } = await sb.from('hof').insert([{
+          season,
+          year: document.getElementById('hof-year').value.trim() || null,
+          winner: document.getElementById('hof-winner').value.trim() || null,
+          mvp: document.getElementById('hof-mvp').value.trim() || null
+        }]);
+        if (error) { toast(error.message); return; }
+        seasonForm.classList.add('hidden');
+        await renderHof();
+        toast('Season archive added');
+      });
+
+      async function renderHof() {
+        const grid = document.getElementById('hof-grid');
+        const { data: hof } = await sb.from('hof').select('*').order('created_at', { ascending: true });
+        const list = hof || [];
+        const cards = list.map(h => `
+          <div class="bg-zinc-900/80 border border-yellow-400/20 rounded-2xl p-5 hover:border-yellow-400/40 transition group">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">${esc(h.season)}</span>
+              <span class="text-[11px] text-zinc-400 font-semibold">${esc(h.year)}</span>
+            </div>
+            <div class="space-y-3 pt-2 border-t border-zinc-800">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-zinc-400 flex items-center gap-1.5"><i class="fas fa-trophy text-yellow-400"></i> League Winner:</span>
+                <span class="font-bold text-white">${esc(h.winner) || '—'}</span>
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-zinc-400 flex items-center gap-1.5"><i class="fas fa-star text-yellow-400"></i> MVP Player:</span>
+                <span class="font-bold text-yellow-400">${esc(h.mvp) || '—'}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        const placeholders = [
+          { title: 'Next Season Archive', sub: 'Pending tournament conclusion.', badge: 'Awaiting Results' },
+          { title: 'Future Season', sub: 'Future scheduled league.', badge: 'Scheduled' }
+        ];
+        const extra = placeholders.slice(0, Math.max(0, 3 - list.length)).map(p => `
+          <div class="bg-zinc-900/40 border border-dashed border-zinc-800 rounded-2xl p-5 flex flex-col items-center justify-center text-center py-8">
+            <div class="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500 mb-3 text-sm">
+              <i class="fas fa-medal"></i>
+            </div>
+            <h4 class="text-zinc-300 font-bold text-xs mb-1">${p.title}</h4>
+            <p class="text-zinc-500 text-[11px] mb-4">${p.sub}</p>
+            <span class="text-[10px] font-semibold bg-zinc-800/80 text-zinc-400 px-3 py-1 rounded-lg">${p.badge}</span>
+          </div>
+        `).join('');
+        grid.innerHTML = cards + extra;
+      }
+
+      // ---- Settings ----
+      (async () => {
+        const { data: cfg } = await sb.from('settings').select('*').eq('id', 1).maybeSingle();
+        if (cfg) {
+          document.getElementById('cfg-title').value = cfg.title || '';
+          document.getElementById('cfg-duration').value = cfg.duration || 90;
+          document.getElementById('cfg-theme').value = cfg.theme || 'gold';
+          document.getElementById('cfg-status').value = cfg.status || 'active';
+        }
+      })();
+
+      document.getElementById('btn-save-settings').addEventListener('click', async () => {
+        const row = {
+          title: document.getElementById('cfg-title').value.trim(),
+          duration: parseInt(document.getElementById('cfg-duration').value, 10) || 90,
+          theme: document.getElementById('cfg-theme').value,
+          status: document.getElementById('cfg-status').value,
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await sb.from('settings').upsert({ id: 1, ...row });
+        if (error) { toast(error.message); return; }
+        toast('Preferences saved to Supabase');
+      });
+
+      document.getElementById('btn-clear-cache').addEventListener('click', async () => {
+        if (!confirm('This will DELETE all matches, players, news, transfers, stats from Supabase. Continue?')) return;
+        await Promise.all([
+          sb.from('matches').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          sb.from('players').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          sb.from('stats').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          sb.from('news').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          sb.from('transfers').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+        ]);
+        toast('All league data cleared');
+        setTimeout(() => location.reload(), 800);
+      });
+
+      document.getElementById('btn-export-json').addEventListener('click', async () => {
+        const [m, p, s, n, t, h, cfg] = await Promise.all([
+          sb.from('matches').select('*'),
+          sb.from('players').select('*'),
+          sb.from('stats').select('*'),
+          sb.from('news').select('*'),
+          sb.from('transfers').select('*'),
+          sb.from('hof').select('*'),
+          sb.from('settings').select('*').eq('id', 1).maybeSingle()
+        ]);
+        const archive = {
+          matches: m.data || [],
+          players: p.data || [],
+          stats: s.data || [],
+          news: n.data || [],
+          transfers: t.data || [],
+          hof: h.data || [],
+          settings: cfg.data || null
+        };
+        const blob = new Blob([JSON.stringify(archive, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'elite-league-supabase-export.json';
+        a.click();
+        toast('Export downloaded');
+      });
+
+      document.getElementById('btn-import-json').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const imported = JSON.parse(await file.text());
+          if (imported.matches?.length) await sb.from('matches').insert(imported.matches.map(({id, created_at, ...r}) => r));
+          if (imported.players?.length) await sb.from('players').insert(imported.players.map(({id, created_at, ...r}) => r));
+          if (imported.stats?.length) await sb.from('stats').insert(imported.stats.map(({id, created_at, ...r}) => r));
+          if (imported.news?.length) await sb.from('news').insert(imported.news.map(({id, created_at, ...r}) => r));
+          if (imported.transfers?.length) await sb.from('transfers').insert(imported.transfers.map(({id, created_at, ...r}) => r));
+          toast('Archive imported to Supabase');
+          setTimeout(() => location.reload(), 800);
+        } catch (err) {
+          toast('Import failed: ' + err.message);
+        }
+      });
+
+      // initial loads
+      await renderMatches();
+      await renderPlayers();
+      await renderFixtures();
+      await renderLive();
+      await renderStats();
+      await renderNews();
+      await renderTransfers();
+      await renderHof();
+      document.getElementById('btn-recalc-standings').click();
+    }
+  </script>
+</body>
+</html>

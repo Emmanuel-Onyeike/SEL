@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite League Season 2 - 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Public VAPID key — replace with yours from: npx web-push generate-vapid-keys -->
+    <meta name="vapid-public-key" content="BGmPQoDZ7S74YcWq7EZ0GOUTtY_UgbdQxbzk_8pUE2gXY4cVFh6bGpj2CwdA4Z-_mSNAIsEyB9Oudw7Fw0nfKGI">
+</head>
+<body class="bg-zinc-950 text-white selection:bg-yellow-400 selection:text-black antialiased">
+    <nav class="fixed top-0 left-0 right-0 bg-black/85 backdrop-blur-md border-b border-yellow-400/20 z-40 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 flex items-center justify-between">
+            <div class="flex items-center gap-x-3 sm:gap-x-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl overflow-hidden border border-yellow-400/40 shadow-lg shadow-yellow-400/10 flex items-center justify-center bg-zinc-900 shrink-0">
+                    <img src="elite logo.png" alt="Elite League Logo" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <div class="font-black text-xl sm:text-2xl tracking-tighter text-white leading-none">ELITE <span class="text-yellow-400">LEAGUE</span></div>
+                    <div class="text-[9px] sm:text-[10px] tracking-widest text-zinc-400 uppercase font-semibold mt-1">Season 2 • 2026</div>
+                </div>
+            </div>
+            <a href="dashboard.html" class="bg-yellow-400 hover:bg-amber-300 text-black px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm tracking-wide transition-all transform active:scale-95 hover:scale-105 shadow-md shadow-yellow-400/20 flex items-center gap-2 shrink-0 no-underline">
+             <i class="fas fa-sign-in-alt"></i>
+             <span class="hidden xs:inline">GO TO</span> DASHBOARD
+         </a>
+        </div>
+    </nav>
+
+    <section class="hero min-h-screen flex items-center justify-center pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs sm:text-sm font-semibold mb-6 sm:mb-8 animate-pulse shadow-sm shadow-yellow-400/5">
+                <i class="fas fa-trophy"></i> Inter-Faculty Football Championship
+            </div>
+            <h1 class="text-4xl sm:text-6xl md:text-8xl font-black tracking-tight leading-[1.1] mb-6">
+                ELITE LEAGUE<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-500 drop-shadow-sm">SEASON 2</span>
+            </h1>
+            <p class="text-base sm:text-xl md:text-2xl text-zinc-300 max-w-2xl mx-auto mb-8 sm:mb-12 font-medium leading-relaxed">
+                The biggest inter-faculty football tournament is back. Witness glory, passion, and elite competition.
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-3">
+              <a href="dashboard.html" class="bg-yellow-400 hover:bg-amber-300 text-black px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm tracking-wide transition-all transform active:scale-95 hover:scale-105 shadow-md shadow-yellow-400/20 flex items-center gap-2 shrink-0 no-underline">
+               <i class="fas fa-sign-in-alt"></i>
+               <span class="hidden xs:inline">GO TO</span> DASHBOARD
+              </a>
+              <button type="button" id="btn-open-notify-modal" class="bg-zinc-900 hover:bg-zinc-800 border border-yellow-400/40 text-yellow-400 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm tracking-wide transition flex items-center gap-2">
+                <i class="fas fa-bell"></i> Enable Alerts
+              </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 bg-zinc-900/50 border-y border-yellow-400/10 relative">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-900 border border-yellow-400/30 rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="space-y-4 text-center md:text-left z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-yellow-400/10 text-yellow-400 text-xs font-bold uppercase tracking-wider">
+                        <i class="fas fa-star"></i> Historic Record Holders
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white">SEASON 1 WINNERS (2025)</h2>
+                    <p class="text-zinc-400 text-sm sm:text-base max-w-lg leading-relaxed">
+                        Setting an unprecedented benchmark in the league, <span class="text-yellow-400 font-bold">CSC 400</span> went completely undefeated! They dominated the tournament with a remarkable <span class="text-white font-semibold">8 wins straight</span> to claim the crown.
+                    </p>
+                    <div class="pt-2 flex flex-wrap justify-center md:justify-start gap-4 text-xs font-semibold text-zinc-300">
+                        <span class="bg-black/50 border border-yellow-400/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                            <i class="fas fa-shield-alt text-yellow-400"></i> Undefeated Run
+                        </span>
+                        <span class="bg-black/50 border border-yellow-400/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                            <i class="fas fa-fire text-yellow-400"></i> 8 Wins Record
+                        </span>
+                    </div>
+                </div>
+                <div class="z-10 bg-black/60 border border-yellow-400/40 rounded-2xl p-6 text-center min-w-[220px] shadow-xl shadow-yellow-400/5">
+                    <div class="w-14 h-14 bg-yellow-400 text-black rounded-2xl flex items-center justify-center text-2xl font-black mx-auto mb-3 shadow-lg shadow-yellow-400/20">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="text-xs uppercase tracking-widest text-zinc-400 font-semibold mb-1">Unbeaten Champions</div>
+                    <div class="text-2xl font-black text-yellow-400 tracking-tight">CSC 400</div>
+                    <div class="text-xs text-zinc-500 mt-1">8 Wins • 0 Losses (2025)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 bg-black relative">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs font-semibold mb-4">
+                <i class="fas fa-heart text-amber-400"></i> Season 1 Gratitude
+            </div>
+            <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-4">THANK YOU TO ALL OUR PARTICIPANTS</h2>
+            <p class="text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
+                We extend our deepest appreciation to every player, team, and fan who made the inaugural tournament an unforgettable success. We are absolutely thrilled and glad to have you all back as we kick off an even bigger and more electric Season 2!
+            </p>
+        </div>
+    </section>
+
+    <section class="py-20 bg-zinc-950 border-t border-yellow-400/10 relative">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs sm:text-sm font-semibold mb-4">
+                    <i class="fas fa-book-open"></i> Official Guidelines
+                </div>
+                <h2 class="text-3xl sm:text-5xl font-black tracking-tight text-white mb-4">COMPETITION HANDBOOK & FORMAT</h2>
+                <p class="text-zinc-400 text-base sm:text-lg">Season 2 introduces faculty-based domestic leagues. Each faculty crowns its own champion before qualifying for the Elite League Championship.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-zinc-900/60 border border-yellow-400/20 rounded-3xl p-8 shadow-xl">
+                    <h3 class="text-2xl font-bold text-white mb-6">Domestic Leagues & Slots</h3>
+                    <div class="space-y-4 text-sm text-zinc-300">
+                        <div class="bg-black/40 border border-zinc-800 p-4 rounded-2xl"><div class="font-bold text-yellow-400 mb-1">Group A: Computer Science</div><div class="text-zinc-400 text-xs">Top 3 Teams</div></div>
+                        <div class="bg-black/40 border border-zinc-800 p-4 rounded-2xl"><div class="font-bold text-yellow-400 mb-1">Group B: Law</div><div class="text-zinc-400 text-xs">Top 3 Teams</div></div>
+                        <div class="bg-black/40 border border-zinc-800 p-4 rounded-2xl"><div class="font-bold text-yellow-400 mb-1">Group C: Management Sciences</div><div class="text-zinc-400 text-xs">Top 2 Teams</div></div>
+                        <div class="bg-black/40 border border-zinc-800 p-4 rounded-2xl"><div class="font-bold text-yellow-400 mb-1">Group D: Natural & Applied Sciences</div><div class="text-zinc-400 text-xs">Top 2 Teams</div></div>
+                        <div class="bg-black/40 border border-zinc-800 p-4 rounded-2xl"><div class="font-bold text-yellow-400 mb-1">Group E: ED Arts</div><div class="text-zinc-400 text-xs">Top 2 Teams</div></div>
+                    </div>
+                </div>
+                <div class="space-y-8">
+                    <div class="bg-zinc-900/60 border border-yellow-400/20 rounded-3xl p-8 shadow-xl">
+                        <h3 class="text-2xl font-bold text-white mb-4">Championship Stage</h3>
+                        <p class="text-zinc-300 text-sm leading-relaxed">12 qualified teams → Round of 12 → Quarters → Semis → Final.</p>
+                    </div>
+                    <div class="bg-zinc-900/60 border border-yellow-400/20 rounded-3xl p-8 shadow-xl">
+                        <h3 class="text-2xl font-bold text-white mb-4">Registration</h3>
+                        <p class="text-zinc-300 text-sm">14 players per team · ₦1,000 per player · No transfers after registration closes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-black border-t border-yellow-400/10 py-8 text-center text-xs sm:text-sm text-zinc-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>&copy; 2026 Elite League. All rights reserved. • Powered by <span class="text-yellow-400 font-semibold">Tech Nxxt Company</span></p>
+        </div>
+    </footer>
+
+    <!-- EliteScore notification permission modal -->
+    <div id="notifyModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div class="bg-zinc-900 border border-yellow-400/30 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
+        <button type="button" id="notifyModalClose" class="absolute top-5 right-5 text-zinc-400 hover:text-white w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="text-center mt-2">
+          <div class="w-16 h-16 bg-yellow-400/10 border border-yellow-400/30 rounded-2xl flex items-center justify-center mx-auto mb-5 text-yellow-400 text-3xl">
+            <i class="fas fa-bell"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Allow EliteScore alerts?</h3>
+          <p class="text-zinc-400 text-sm mb-6 leading-relaxed">
+            Get phone notifications when fixtures are added, matches go live, scores update, or news is published — even if you are not on this site (like SofaScore).
+          </p>
+          <p id="notifyStatus" class="text-[11px] text-zinc-500 mb-4 min-h-[1.25rem]"></p>
+          <div class="space-y-3">
+            <button type="button" id="btn-allow-notify" class="w-full bg-yellow-400 hover:bg-amber-300 text-black py-3.5 rounded-xl font-bold text-sm transition">
+              Allow notifications
+            </button>
+            <button type="button" id="btn-deny-notify" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-3.5 rounded-xl font-semibold text-sm transition">
+              Not now
+            </button>
+          </div>
+          <p class="text-[10px] text-zinc-600 mt-4">iPhone: add this site to Home Screen (Share → Add to Home Screen), then enable alerts for best results.</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="/script..js"></script>
+    <script>
+    (function () {
+      const SUPABASE_URL = 'https://tedreqxvodszlsnmigab.supabase.co';
+      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlZHJlcXh2b2Rzemxzbm1pZ2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDM1NzUsImV4cCI6MjEwMDY3OTU3NX0.z7vVBZHhJl-AlXqFpJ3-v3EmuyIL8GUAfZha0EC97CI';
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+      const modal = document.getElementById('notifyModal');
+      const statusEl = document.getElementById('notifyStatus');
+
+      function openModal() { modal.classList.remove('hidden'); }
+      function closeModal() { modal.classList.add('hidden'); }
+
+      document.getElementById('btn-open-notify-modal').addEventListener('click', openModal);
+      document.getElementById('notifyModalClose').addEventListener('click', closeModal);
+      document.getElementById('btn-deny-notify').addEventListener('click', () => {
+        localStorage.setItem('elite_notify_skip', '1');
+        closeModal();
+      });
+
+      // Auto-prompt once after short delay if not decided
+      setTimeout(() => {
+        if (localStorage.getItem('elite_notify_ok') === '1') return;
+        if (localStorage.getItem('elite_notify_skip') === '1') return;
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+        openModal();
+      }, 2500);
+
+      function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(base64);
+        const out = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+        return out;
+      }
+
+      async function enablePush() {
+        statusEl.textContent = 'Requesting permission…';
+        if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+          statusEl.textContent = 'Push not supported on this browser. Try Chrome/Edge on Android, or Safari 16.4+ as Home Screen app on iPhone.';
+          return;
+        }
+
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') {
+          statusEl.textContent = 'Permission denied. You can enable it later in browser settings.';
+          return;
+        }
+
+        statusEl.textContent = 'Registering service worker…';
+        const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        await navigator.serviceWorker.ready;
+
+        const vapidMeta = document.querySelector('meta[name="vapid-public-key"]');
+        const vapidKey = (vapidMeta && vapidMeta.content) || '';
+        if (!vapidKey || vapidKey.startsWith('EiMsbaRNdkH1LAqC5_VLiCD6KaR2-rIEEDdLvoeK_H0')) {
+          statusEl.textContent = 'Permission granted, but VAPID public key is not set yet. Admin must add VAPID keys (see setup). Local test notification only.';
+          new Notification('EliteScore', { body: 'Alerts permission is on. Finish VAPID setup for remote pushes.', icon: 'elite logo.png' });
+          localStorage.setItem('elite_notify_ok', '1');
+          return;
+        }
+
+        statusEl.textContent = 'Saving subscription…';
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(vapidKey)
+          });
+        }
+
+        const json = sub.toJSON();
+        const { error } = await sb.from('push_subscriptions').upsert({
+          endpoint: json.endpoint,
+          p256dh: json.keys.p256dh,
+          auth: json.keys.auth,
+          user_agent: navigator.userAgent
+        }, { onConflict: 'endpoint' });
+
+        if (error) {
+          statusEl.textContent = 'Could not save subscription: ' + error.message + ' (run SQL for push_subscriptions?)';
+          return;
+        }
+
+        localStorage.setItem('elite_notify_ok', '1');
+        statusEl.textContent = 'EliteScore alerts enabled. You will get phone notifications for fixtures, live matches, and more.';
+        setTimeout(closeModal, 1800);
+      }
+
+      document.getElementById('btn-allow-notify').addEventListener('click', () => {
+        enablePush().catch((e) => {
+          statusEl.textContent = e.message || String(e);
+        });
+      });
+    })();
+    </script>
+</body>
+</html>
