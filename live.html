@@ -187,7 +187,7 @@
             ? (events || []).map(e => `
               <div class="flex items-start gap-2 text-[11px] py-1.5 border-b border-zinc-800/50 last:border-0">
                 <span class="text-zinc-500 font-mono w-8 shrink-0">${e.minute}'</span>
-                <span class="text-zinc-300 flex-1">${eventLabel(e.event_type)}${e.player ? ' · <span class="text-white font-semibold">' + esc(e.player) + '</span>' : ''}${e.team ? ' <span class="text-zinc-500">(' + esc(e.team) + ')</span>' : ''}${e.note ? ' <span class="text-zinc-500">— ' + esc(e.note) + '</span>' : ''}</span>
+                <span class="text-zinc-300 flex-1">${eventLabel(e.event_type)}${e.player ? ' · <span class="text-white font-semibold">' + esc(e.player) + '</span>' : ''}${e.team ? ' <span class="text-zinc-500">(' + esc(e.team) + ')</span>' : ''}${(function(){ if(!e.note) return ''; const m=String(e.note).match(/^SHOUT:([^|]*)/); if(m) return ' <span class="text-yellow-400 font-black uppercase tracking-wide">'+esc(m[1].trim())+'</span>'+(e.note.includes('|')?' <span class="text-zinc-500">— '+esc(e.note.split('|').slice(1).join('|').trim())+'</span>':''); return ' <span class="text-zinc-500">— '+esc(e.note)+'</span>'; })()}</span>
               </div>`).join('')
             : '<div class="text-[11px] text-zinc-600 py-2">No events logged yet.</div>';
 
@@ -223,5 +223,60 @@
         if (empty) empty.outerHTML = '<div class="space-y-4">' + cards.join('') + '</div>';
       })();
     </script>
+
+    <script>
+    function playGoalCheer() {
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const now = ctx.currentTime;
+        const bufferSize = ctx.sampleRate * 1.8;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          const t = i / bufferSize;
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 1.4) * 0.35;
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.value = 1200;
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.0001, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noise.start(now);
+        noise.stop(now + 1.85);
+        [440, 554, 659, 880].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq * 0.7, now);
+          osc.frequency.exponentialRampToValueAtTime(freq, now + 0.12 + i * 0.05);
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.exponentialRampToValueAtTime(0.12, now + 0.04 + i * 0.03);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.9 + i * 0.1);
+          osc.connect(g);
+          g.connect(ctx.destination);
+          osc.start(now + i * 0.04);
+          osc.stop(now + 1.2 + i * 0.1);
+        });
+      } catch (e) {}
+    }
+    // Unlock audio on first tap (mobile browsers)
+    document.body.addEventListener('click', function unlock() {
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) { const c = new Ctx(); c.resume(); }
+      } catch (_) {}
+      document.body.removeEventListener('click', unlock);
+    }, { once: true });
+    </script>
+    
 </body>
 </html>

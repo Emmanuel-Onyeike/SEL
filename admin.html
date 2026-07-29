@@ -477,6 +477,11 @@
               <label class="block text-zinc-400 mb-1.5 font-semibold">Note (optional)</label>
               <input type="text" id="ev-note" placeholder="e.g. top corner, soft foul, handball in box" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
             </div>
+            <div class="sm:col-span-2 lg:col-span-3">
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Goal shout (goals only)</label>
+              <input type="text" id="ev-shout" placeholder="GOAL · GOALLLLLL · GOALAZO · GOOOAL!" class="w-full bg-zinc-950 border border-yellow-400/30 rounded-xl px-4 py-3 text-yellow-400 font-black tracking-wide uppercase" />
+              <p class="text-[10px] text-zinc-500 mt-1">Plays crowd celebration sound when you save a goal. Shown big on Live.</p>
+            </div>
           </div>
           <div class="flex flex-wrap gap-3">
             <button type="button" id="btn-save-event" class="px-5 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">Save event</button>
@@ -885,6 +890,73 @@
     }
 
 
+    
+    function playGoalCheer() {
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const now = ctx.currentTime;
+        // Noise burst (crowd-ish)
+        const bufferSize = ctx.sampleRate * 1.8;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          const t = i / bufferSize;
+          const env = Math.pow(1 - t, 1.4);
+          data[i] = (Math.random() * 2 - 1) * env * 0.35;
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.value = 1200;
+        noiseFilter.Q.value = 0.7;
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.0001, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
+        noiseGain.gain.exponentialRampToValueAtTime(0.15, now + 1.2);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noise.start(now);
+        noise.stop(now + 1.85);
+        // Rising horn tones
+        [440, 554, 659, 880].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq * 0.7, now);
+          osc.frequency.exponentialRampToValueAtTime(freq, now + 0.12 + i * 0.05);
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.exponentialRampToValueAtTime(0.12, now + 0.04 + i * 0.03);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.9 + i * 0.1);
+          osc.connect(g);
+          g.connect(ctx.destination);
+          osc.start(now + i * 0.04);
+          osc.stop(now + 1.2 + i * 0.1);
+        });
+      } catch (e) { console.warn('cheer audio', e); }
+    }
+
+    function showGoalShoutBanner(text) {
+      let el = document.getElementById('goal-shout-banner');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'goal-shout-banner';
+        el.className = 'fixed inset-0 z-[300] flex items-center justify-center pointer-events-none';
+        el.innerHTML = '<div class="px-6 py-4 rounded-3xl bg-black/80 border-2 border-yellow-400 shadow-2xl shadow-yellow-400/30"><div id="goal-shout-text" class="text-4xl sm:text-6xl font-black text-yellow-400 tracking-widest text-center uppercase animate-pulse"></div></div>';
+        document.body.appendChild(el);
+      }
+      const tx = document.getElementById('goal-shout-text');
+      if (tx) tx.textContent = text || 'GOOOAL!';
+      el.classList.remove('hidden');
+      el.style.opacity = '1';
+      clearTimeout(el._tid);
+      el._tid = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.classList.add('hidden'), 400); }, 2800);
+    }
+
     function toast(msg) {
       const t = document.getElementById('toast');
       t.textContent = msg;
@@ -1157,7 +1229,9 @@
         const team = document.getElementById('ev-team').value;
         const player = document.getElementById('ev-player').value.trim();
         const minute = parseInt(document.getElementById('ev-minute').value, 10) || 0;
-        const note = document.getElementById('ev-note').value.trim() || null;
+        const noteRaw = document.getElementById('ev-note').value.trim();
+        const shout = (document.getElementById('ev-shout') && document.getElementById('ev-shout').value.trim()) || '';
+        const note = [shout ? ('SHOUT:' + shout) : '', noteRaw].filter(Boolean).join(' | ') || null;
 
         const { error } = await sb.from('match_events').insert([{
           match_id: matchId, minute, event_type, player: player || null, team, note
@@ -1184,7 +1258,9 @@
           // Push notification for big events
           const label = m.home + ' ' + h + ' - ' + a + ' ' + m.away;
           if (['goal','penalty_goal','freekick_goal','own_goal'].includes(event_type)) {
-            notifyFans('⚽ GOAL!', (player ? player + ' · ' : '') + label + ' (' + minute + "')", '/live.html', 'goal');
+            playGoalCheer();
+            showGoalShoutBanner(shout || 'GOOOAL!');
+            notifyFans('⚽ ' + (shout || 'GOAL!'), (player ? player + ' · ' : '') + label + ' (' + minute + "')", '/live.html', 'goal');
           } else if (event_type === 'red' || event_type === 'second_yellow') {
             notifyFans('🟥 Red Card', (player || 'Player') + ' · ' + label, '/live.html', 'card');
           } else if (event_type.startsWith('var_')) {
