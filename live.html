@@ -8,6 +8,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="live.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#FACC15">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EliteScore">
+    <link rel="apple-touch-icon" href="/elite logo.png">
+
 </head>
 <body class="bg-zinc-950 text-white selection:bg-yellow-400 selection:text-black antialiased flex flex-col min-h-screen">
 
@@ -150,7 +159,39 @@
           return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
 
-        const rows = matches.map(m => `
+        function eventLabel(ev) {
+          const map = {
+            goal: '⚽ Goal',
+            own_goal: '⚽ Own Goal',
+            penalty_goal: '⚽ Penalty',
+            penalty_miss: '❌ Penalty Missed',
+            freekick_goal: '⚽ Free Kick',
+            yellow: '🟨 Yellow Card',
+            red: '🟥 Red Card',
+            second_yellow: '🟥 Second Yellow',
+            var_check: '📺 VAR Check',
+            var_goal_confirmed: '📺 VAR — Goal stands',
+            var_goal_overturned: '📺 VAR — Goal overturned',
+            var_penalty_awarded: '📺 VAR — Penalty awarded',
+            var_penalty_cancelled: '📺 VAR — Penalty cancelled',
+            handball: 'Handball',
+            foul: 'Foul'
+          };
+          return map[ev] || ev;
+        }
+
+        const cards = [];
+        for (const m of matches) {
+          const { data: events } = await sb.from('match_events').select('*').eq('match_id', m.id).order('minute', { ascending: true }).order('created_at', { ascending: true });
+          const evHtml = (events || []).length
+            ? (events || []).map(e => `
+              <div class="flex items-start gap-2 text-[11px] py-1.5 border-b border-zinc-800/50 last:border-0">
+                <span class="text-zinc-500 font-mono w-8 shrink-0">${e.minute}'</span>
+                <span class="text-zinc-300 flex-1">${eventLabel(e.event_type)}${e.player ? ' · <span class="text-white font-semibold">' + esc(e.player) + '</span>' : ''}${e.team ? ' <span class="text-zinc-500">(' + esc(e.team) + ')</span>' : ''}${e.note ? ' <span class="text-zinc-500">— ' + esc(e.note) + '</span>' : ''}</span>
+              </div>`).join('')
+            : '<div class="text-[11px] text-zinc-600 py-2">No events logged yet.</div>';
+
+          cards.push(`
           <div class="p-5 rounded-2xl bg-zinc-950/70 border border-green-500/30 hover:border-green-400/50 transition">
             <div class="flex items-center gap-2 mb-3">
               <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
@@ -170,13 +211,16 @@
             </div>
             <div class="text-[11px] text-zinc-500 mt-3 flex flex-wrap gap-x-3 justify-center">
               <span><i class="fas fa-map-marker-alt mr-1 text-yellow-400/70"></i>${esc(m.venue) || 'TBD'}</span>
-              ${m.match_date ? '<span><i class="fas fa-calendar-day mr-1 text-yellow-400/70"></i>' + m.match_date + '</span>' : ''}
             </div>
-          </div>
-        `).join('');
+            <div class="mt-4 pt-3 border-t border-zinc-800">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2">Match events</div>
+              ${evHtml}
+            </div>
+          </div>`);
+        }
 
         const empty = document.getElementById('live-empty');
-        if (empty) empty.outerHTML = '<div class="space-y-4">' + rows + '</div>';
+        if (empty) empty.outerHTML = '<div class="space-y-4">' + cards.join('') + '</div>';
       })();
     </script>
 </body>

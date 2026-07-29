@@ -41,6 +41,15 @@
     .scroll-thin::-webkit-scrollbar-track { background: #18181b; }
     .scroll-thin::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
   </style>
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#FACC15">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EliteScore">
+    <link rel="apple-touch-icon" href="/elite logo.png">
+
 </head>
 <body class="bg-black text-white min-h-screen">
 
@@ -422,8 +431,59 @@
             <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-broadcast-tower"></i></span>
             Live Match Control
           </h2>
-          <p class="text-zinc-400 text-xs mt-1">Set a match to “Live” status so it appears in the public Active Match Streams section.</p>
+          <p class="text-zinc-400 text-xs mt-1">Log goals, cards, VAR and correct the score. Events appear on the public Live page and can push to phones.</p>
         </div>
+
+        <div id="live-event-form" class="hidden bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl space-y-4">
+          <h3 class="text-sm font-bold text-yellow-400">Log event for: <span id="live-form-match-label" class="text-white"></span></h3>
+          <input type="hidden" id="live-form-match-id" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Minute</label>
+              <input type="number" id="ev-minute" min="0" max="120" value="1" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Event type</label>
+              <select id="ev-type" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white">
+                <option value="goal">⚽ Normal Goal</option>
+                <option value="penalty_goal">⚽ Penalty Goal</option>
+                <option value="freekick_goal">⚽ Free Kick Goal</option>
+                <option value="own_goal">⚽ Own Goal</option>
+                <option value="penalty_miss">❌ Penalty Missed</option>
+                <option value="yellow">🟨 Yellow Card</option>
+                <option value="red">🟥 Red Card</option>
+                <option value="second_yellow">🟥 Second Yellow → Red</option>
+                <option value="var_check">📺 VAR Check</option>
+                <option value="var_goal_confirmed">📺 VAR — Goal stands</option>
+                <option value="var_goal_overturned">📺 VAR — Goal overturned</option>
+                <option value="var_penalty_awarded">📺 VAR — Penalty awarded</option>
+                <option value="var_penalty_cancelled">📺 VAR — Penalty cancelled</option>
+                <option value="handball">Handball</option>
+                <option value="foul">Foul</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Team</label>
+              <select id="ev-team" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white">
+                <option value="home">Home</option>
+                <option value="away">Away</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Player name</label>
+              <input type="text" id="ev-player" placeholder="Who scored / booked" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-zinc-400 mb-1.5 font-semibold">Note (optional)</label>
+              <input type="text" id="ev-note" placeholder="e.g. top corner, soft foul, handball in box" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white" />
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button type="button" id="btn-save-event" class="px-5 py-2.5 rounded-xl bg-yellow-400 text-black font-bold text-xs hover:bg-yellow-300 transition">Save event</button>
+            <button type="button" id="btn-cancel-event" class="px-5 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold text-xs">Cancel</button>
+          </div>
+        </div>
+
         <div class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl">
           <div id="live-admin-list" class="space-y-3">
             <div class="text-center py-12 text-zinc-500 text-xs">No live matches. Change a match status to “Live” in the Matches tab.</div>
@@ -1010,22 +1070,136 @@
 
       async function renderLive() {
         const el = document.getElementById('live-admin-list');
+        const form = document.getElementById('live-event-form');
         const { data: live } = await sb.from('matches').select('*').eq('status', 'live');
         if (!live || !live.length) {
           el.innerHTML = '<div class="text-center py-12 text-zinc-500 text-xs">No live matches. Change a match status to “Live” in the Matches tab.</div>';
           return;
         }
-        el.innerHTML = live.map(m => `
-          <div class="p-4 rounded-2xl bg-zinc-950/80 border border-green-500/30 text-xs">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-              <span class="text-green-400 font-bold uppercase text-[10px]">Live</span>
+
+        const blocks = [];
+        for (const m of live) {
+          const { data: events } = await sb.from('match_events').select('*').eq('match_id', m.id).order('minute', { ascending: true }).order('created_at', { ascending: true });
+          const evRows = (events || []).map(e => `
+            <div class="flex items-center justify-between gap-2 py-1.5 border-b border-zinc-800/50 text-[11px]">
+              <span class="text-zinc-400"><span class="font-mono text-zinc-500">${e.minute}'</span> ${esc(e.event_type)} ${e.player ? '· ' + esc(e.player) : ''} ${e.team ? '(' + esc(e.team) + ')' : ''}</span>
+              <button type="button" data-del-ev="${e.id}" data-mid="${m.id}" data-etype="${e.event_type}" data-team="${e.team || ''}" class="del-event text-red-400 hover:text-red-300 px-2">Undo</button>
             </div>
-            <div class="font-bold text-white text-sm">${esc(m.home)} <span class="text-yellow-400">${m.hscore} - ${m.ascore}</span> ${esc(m.away)}</div>
-            <div class="text-zinc-500 mt-1">${esc(m.venue) || ''} · ${esc(m.stage)}</div>
-          </div>
-        `).join('');
+          `).join('') || '<div class="text-zinc-600 text-[11px] py-2">No events yet.</div>';
+
+          blocks.push(`
+          <div class="p-4 rounded-2xl bg-zinc-950/80 border border-green-500/30 text-xs space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                  <span class="text-green-400 font-bold uppercase text-[10px]">Live</span>
+                </div>
+                <div class="font-bold text-white text-sm">${esc(m.home)} <span class="text-yellow-400 text-base">${m.hscore} - ${m.ascore}</span> ${esc(m.away)}</div>
+                <div class="text-zinc-500 mt-1">${esc(m.venue) || ''} · ${esc(m.stage)}</div>
+              </div>
+              <button type="button" class="btn-log-event px-3 py-2 rounded-xl bg-yellow-400 text-black font-bold text-[11px]"
+                data-id="${m.id}" data-home="${esc(m.home)}" data-away="${esc(m.away)}">+ Log event</button>
+            </div>
+            <div class="pt-2 border-t border-zinc-800">${evRows}</div>
+          </div>`);
+        }
+        el.innerHTML = blocks.join('');
+
+        el.querySelectorAll('.btn-log-event').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.getElementById('live-form-match-id').value = btn.dataset.id;
+            document.getElementById('live-form-match-label').textContent = btn.dataset.home + ' vs ' + btn.dataset.away;
+            form.classList.remove('hidden');
+            form.scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+
+        el.querySelectorAll('.del-event').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Remove this event? Goal events will adjust the score.')) return;
+            const et = btn.dataset.etype;
+            const team = btn.dataset.team;
+            const mid = btn.dataset.mid;
+            await sb.from('match_events').delete().eq('id', btn.dataset.delEv);
+            // Adjust score if undoing a scoring event
+            const scoring = ['goal','penalty_goal','freekick_goal','own_goal'];
+            if (scoring.includes(et) && mid) {
+              const { data: m } = await sb.from('matches').select('*').eq('id', mid).single();
+              if (m) {
+                let h = m.hscore || 0, a = m.ascore || 0;
+                if (et === 'own_goal') {
+                  // own goal credited to the other team when logged; undo reverses that
+                  if (team === 'home') a = Math.max(0, a - 1); else h = Math.max(0, h - 1);
+                } else {
+                  if (team === 'home') h = Math.max(0, h - 1); else a = Math.max(0, a - 1);
+                }
+                await sb.from('matches').update({ hscore: h, ascore: a }).eq('id', mid);
+              }
+            }
+            if (et === 'var_goal_overturned') {
+              /* score already adjusted when overturn was logged */
+            }
+            await renderLive();
+            toast('Event removed');
+          });
+        });
       }
+
+      document.getElementById('btn-cancel-event')?.addEventListener('click', () => {
+        document.getElementById('live-event-form').classList.add('hidden');
+      });
+
+      document.getElementById('btn-save-event')?.addEventListener('click', async () => {
+        const matchId = document.getElementById('live-form-match-id').value;
+        if (!matchId) return;
+        const event_type = document.getElementById('ev-type').value;
+        const team = document.getElementById('ev-team').value;
+        const player = document.getElementById('ev-player').value.trim();
+        const minute = parseInt(document.getElementById('ev-minute').value, 10) || 0;
+        const note = document.getElementById('ev-note').value.trim() || null;
+
+        const { error } = await sb.from('match_events').insert([{
+          match_id: matchId, minute, event_type, player: player || null, team, note
+        }]);
+        if (error) { toast(error.message); return; }
+
+        // Score adjustments
+        const { data: m } = await sb.from('matches').select('*').eq('id', matchId).single();
+        if (m) {
+          let h = m.hscore || 0, a = m.ascore || 0;
+          const addHome = () => { h += 1; };
+          const addAway = () => { a += 1; };
+          if (event_type === 'goal' || event_type === 'penalty_goal' || event_type === 'freekick_goal') {
+            if (team === 'home') addHome(); else addAway();
+          } else if (event_type === 'own_goal') {
+            // own goal by home player → away scores
+            if (team === 'home') addAway(); else addHome();
+          } else if (event_type === 'var_goal_overturned') {
+            // remove last goal for that team
+            if (team === 'home') h = Math.max(0, h - 1); else a = Math.max(0, a - 1);
+          }
+          await sb.from('matches').update({ hscore: h, ascore: a }).eq('id', matchId);
+
+          // Push notification for big events
+          const label = m.home + ' ' + h + ' - ' + a + ' ' + m.away;
+          if (['goal','penalty_goal','freekick_goal','own_goal'].includes(event_type)) {
+            notifyFans('⚽ GOAL!', (player ? player + ' · ' : '') + label + ' (' + minute + "')", '/live.html', 'goal');
+          } else if (event_type === 'red' || event_type === 'second_yellow') {
+            notifyFans('🟥 Red Card', (player || 'Player') + ' · ' + label, '/live.html', 'card');
+          } else if (event_type.startsWith('var_')) {
+            notifyFans('📺 VAR', event_type.replace(/_/g, ' ') + (player ? ' · ' + player : ''), '/live.html', 'var');
+          }
+        }
+
+        document.getElementById('live-event-form').classList.add('hidden');
+        document.getElementById('ev-player').value = '';
+        document.getElementById('ev-note').value = '';
+        await renderLive();
+        await renderMatches();
+        toast('Event saved');
+      });
+
 
       // ---- Players (Supabase) ----
       let editPlayerId = null;
