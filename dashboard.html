@@ -255,34 +255,37 @@
         </div>
     </div>
 </div>
+<!-- Detailed Tournament Schedule Overview Table -->
+<div id="matchday-lineup" class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+    <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/80">
+        <div>
+            <h3 class="text-lg font-black text-white tracking-tight flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
+                    <i class="fas fa-calendar-alt"></i>
+                </span>
+                Upcoming Match Day Lineup
+            </h3>
+            <p class="text-xs text-zinc-400 mt-0.5">Overview of immediate fixtures scheduled across faculty pitches.</p>
+        </div>
+        <span class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">No Data Yet</span>
+    </div>
 
-            <!-- Detailed Tournament Schedule Overview Table -->
-            <div id="matchday-lineup" class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-                <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/80">
-                    <div>
-                        <h3 class="text-lg font-black text-white tracking-tight flex items-center gap-2">
-                            <span class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
-                                <i class="fas fa-calendar-alt"></i>
-                            </span>
-                            Upcoming Match Day Lineup
-                        </h3>
-                        <p class="text-xs text-zinc-400 mt-0.5">Overview of immediate fixtures scheduled across faculty pitches.</p>
-                    </div>
-                    <span class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">No Data Yet</span>
-                </div>
-            
-                <!-- Empty State Display -->
-                <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-yellow-400/20 flex items-center justify-center text-yellow-400 text-2xl mb-4 shadow-inner">
-                        <i class="fas fa-calendar-times"></i>
-                    </div>
-                    <h4 class="text-white font-bold text-base mb-1">No Fixtures Scheduled Yet</h4>
-                    <p class="text-zinc-400 text-xs max-w-sm mb-5 leading-relaxed">
-                        We haven't saved any fixture match data yet. Upcoming match day lineups will populate here automatically once generated.
-                    </p>
-                  
-                </div>
+    <!-- Scrollable Content Area -->
+    <div class="max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+        <!-- Empty State Display -->
+        <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-yellow-400/20 flex items-center justify-center text-yellow-400 text-2xl mb-4 shadow-inner">
+                <i class="fas fa-calendar-times"></i>
             </div>
+            <h4 class="text-white font-bold text-base mb-1">No Fixtures Scheduled Yet</h4>
+            <p class="text-zinc-400 text-xs max-w-sm mb-5 leading-relaxed">
+                We haven't saved any fixture match data yet. Upcoming match day lineups will populate here automatically once generated.
+            </p>
+        </div>
+
+        <!-- Fixtures will be injected here later -->
+    </div>
+</div>
 
         </main>
     </div>
