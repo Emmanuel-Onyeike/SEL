@@ -60,37 +60,63 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div id="goals-section" class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/80">
-                            <div class="flex items-center gap-2.5 text-yellow-400 font-bold text-sm tracking-wide">
-                                <div class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-futbol"></i></div>
-                                Top Goalscorers
+                <!-- Top Goalscorers -->
+                <div id="goals-section" class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col">
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/80">
+                        <div class="flex items-center gap-2.5 text-yellow-400 font-bold text-sm tracking-wide">
+                            <div class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
+                                <i class="fas fa-futbol"></i>
                             </div>
-                            <span id="goals-badge" class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">No Data Yet</span>
+                            Top Goalscorers
                         </div>
+                        <span id="goals-badge" class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">
+                            No Data Yet
+                        </span>
+                    </div>
+            
+                    <!-- Scrollable Content -->
+                    <div class="max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
                         <div class="flex flex-col items-center justify-center py-12 px-4 text-center" id="goals-empty">
-                            <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-yellow-400/20 flex items-center justify-center text-yellow-400 text-2xl mb-4 shadow-inner"><i class="fas fa-shoe-prints"></i></div>
+                            <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-yellow-400/20 flex items-center justify-center text-yellow-400 text-2xl mb-4 shadow-inner">
+                                <i class="fas fa-shoe-prints"></i>
+                            </div>
                             <h3 class="text-white font-black text-base mb-1.5">No Goal Records Yet</h3>
-                            <p class="text-zinc-400 text-xs sm:text-sm max-w-sm mb-6 leading-relaxed">Goal statistics will populate here automatically once match goals are recorded in the system.</p>
+                            <p class="text-zinc-400 text-xs sm:text-sm max-w-sm mb-6 leading-relaxed">
+                                Goal statistics will populate here automatically once match goals are recorded in the system.
+                            </p>
                         </div>
+            
+                        <!-- Goalscorers list will be injected here -->
                     </div>
                 </div>
-
-                <div id="assists-section" class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/80">
-                            <div class="flex items-center gap-2.5 text-yellow-400 font-bold text-sm tracking-wide">
-                                <div class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs"><i class="fas fa-hands-helping"></i></div>
-                                Top Playmakers (Assists)
+            
+                <!-- Top Playmakers (Assists) -->
+                <div id="assists-section" class="bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-black border border-yellow-400/20 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col">
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/80">
+                        <div class="flex items-center gap-2.5 text-yellow-400 font-bold text-sm tracking-wide">
+                            <div class="w-8 h-8 rounded-xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 text-xs">
+                                <i class="fas fa-hands-helping"></i>
                             </div>
-                            <span id="assists-badge" class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">No Data Yet</span>
+                            Top Playmakers (Assists)
                         </div>
+                        <span id="assists-badge" class="text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 px-3 py-1 rounded-xl border border-zinc-700/50">
+                            No Data Yet
+                        </span>
+                    </div>
+            
+                    <!-- Scrollable Content -->
+                    <div class="max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
                         <div class="flex flex-col items-center justify-center py-12 px-4 text-center" id="assists-empty">
-                            <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-yellow-400/20 flex items-center justify-center text-yellow-400 text-2xl mb-4 shadow-inner"><i class="fas fa-chart-line"></i></div>
+                            <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-yellow-400/20 flex items-center justify-center text-yellow-400 text-2xl mb-4 shadow-inner">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
                             <h3 class="text-white font-black text-base mb-1.5">No Assist Records Yet</h3>
-                            <p class="text-zinc-400 text-xs sm:text-sm max-w-sm mb-6 leading-relaxed">Playmaker standings will appear here once assist statistics are logged from active fixtures.</p>
+                            <p class="text-zinc-400 text-xs sm:text-sm max-w-sm mb-6 leading-relaxed">
+                                Playmaker standings will appear here once assist statistics are logged from active fixtures.
+                            </p>
                         </div>
+            
+                        <!-- Assists list will be injected here -->
                     </div>
                 </div>
             </div>
