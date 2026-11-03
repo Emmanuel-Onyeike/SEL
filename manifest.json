@@ -1,31 +1,27 @@
 {
+  "id": "/dashboard.html",
   "name": "Elite League Season 2",
   "short_name": "EliteScore",
   "description": "Elite League live scores, fixtures, standings and news",
+  "lang": "en",
   "start_url": "/dashboard.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#09090b",
   "theme_color": "#FACC15",
- "icons": [
-  {
-    "src": "/elite-logo.png",
-    "sizes": "192x192",
-    "type": "image/png",
-    "purpose": "any"
-  },
-  {
-    "src": "/elite-logo.png",
-    "sizes": "512x512",
-    "type": "image/png",
-    "purpose": "any"
-  },
-  {
-    "src": "/elite-logo.png",
-    "sizes": "512x512",
-    "type": "image/png",
-    "purpose": "maskable"
-  }
-]
+  "icons": [
+    {
+      "src": "/elite-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/elite-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
