@@ -4,6 +4,8 @@
   "short_name": "EliteScore",
   "description": "Elite League live scores, fixtures, standings and news",
   "lang": "en",
+  "dir": "ltr",
+  "categories": ["sports", "news"],
   "start_url": "/dashboard.html",
   "scope": "/",
   "display": "standalone",
@@ -22,6 +24,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/elite-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
